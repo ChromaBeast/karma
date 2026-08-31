@@ -11,7 +11,7 @@ interface AuthContextValue {
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
-  login: (email: string, name?: string) => Promise<void>;
+  login: (email: string, password?: string, name?: string) => Promise<void>;
   demoLogin: () => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
@@ -71,14 +71,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(interval);
   }, [user]);
 
-  const login = async (email: string, name?: string) => {
+  const login = async (email: string, password?: string, name?: string) => {
     setIsLoading(true);
     try {
-      const session = await api.login(email, name);
+      const session = await api.login(email, password, name);
       setUser(session.user);
       setIsAuthModalOpen(false);
     } catch {
-      // Offline fallback
+      // Fallback
       setUser({
         id: `user-${Date.now()}`,
         email,
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const demoLogin = async () => {
-    await login('alex.chen@karma.app', 'Alex Chen');
+    await login('alex.chen@karma.app', 'demo1234', 'Alex Chen');
   };
 
   const logout = async () => {

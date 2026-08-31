@@ -60,6 +60,7 @@ func BuildDependencies() ServerDependencies {
 		log.Fatalf("failed to initialize KMS key: %v", err)
 	}
 
+	var userRepo *repository.UserRepository
 	var careerRepo *repository.CareerRepository
 	var vaultRepo *repository.VaultRepository
 
@@ -74,6 +75,7 @@ func BuildDependencies() ServerDependencies {
 			if err := db.RunMigrations(ctx, database.Pool); err != nil {
 				log.Printf("⚠️ Auto-migration error: %v", err)
 			}
+			userRepo = repository.NewUserRepository(database.Pool)
 			careerRepo = repository.NewCareerRepository(database.Pool)
 			vaultRepo = repository.NewVaultRepository(database.Pool)
 		}
@@ -81,9 +83,14 @@ func BuildDependencies() ServerDependencies {
 		log.Println("ℹ️ DATABASE_URL not set — running with in-memory persistence")
 	}
 
-	jwtSvc := auth.NewJWTService("karma-production-secret-key-32b-secure")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "karma-production-secret-key-32b-secure"
+	}
+
+	jwtSvc := auth.NewJWTService(jwtSecret)
 	refMgr := auth.NewRefreshTokenManager(30 * 24 * time.Hour)
-	authH := auth.NewAuthHandler(jwtSvc, refMgr)
+	authH := auth.NewAuthHandler(jwtSvc, refMgr, userRepo)
 
 	vaultSvc := vault.NewVaultService(kms, vaultRepo)
 	vaultH := vault.NewVaultHandler(vaultSvc)

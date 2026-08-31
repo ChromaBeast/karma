@@ -92,10 +92,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}, retry = t
 
 export const api = {
   // Auth & Token Rotation
-  login: async (email: string, name?: string): Promise<AuthSession> => {
+  login: async (email: string, password?: string, name?: string): Promise<AuthSession> => {
     const data = await request<any>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, name }),
+      body: JSON.stringify({ email, password, name }),
     }, false);
     setTokens(data.access_token, data.refresh_token);
     return { accessToken: data.access_token, refreshToken: data.refresh_token, user: data.user };

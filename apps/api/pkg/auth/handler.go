@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -8,21 +9,27 @@ import (
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 type AuthHandler struct {
 	jwtService *JWTService
 	refreshMgr *RefreshTokenManager
+	repo       *repository.UserRepository
 	mu         sync.RWMutex
 	users      map[uuid.UUID]*models.User
 }
 
-func NewAuthHandler(jwtSvc *JWTService, refMgr *RefreshTokenManager) *AuthHandler {
-	return &AuthHandler{
+func NewAuthHandler(jwtSvc *JWTService, refMgr *RefreshTokenManager, repo ...*repository.UserRepository) *AuthHandler {
+	h := &AuthHandler{
 		jwtService: jwtSvc,
 		refreshMgr: refMgr,
 		users:      make(map[uuid.UUID]*models.User),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		h.repo = repo[0]
+	}
+	return h
 }
 
 func (h *AuthHandler) SeedUser(user *models.User) {
@@ -91,6 +98,10 @@ func (h *AuthHandler) LinkedInCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	h.mu.Unlock()
 
+	if h.repo != nil {
+		_ = h.repo.CreateUser(context.Background(), user)
+	}
+
 	scopes := []string{"resume:read", "career:read", "career:write"}
 	accessToken, _, err := h.jwtService.GenerateAccessToken(*user, scopes)
 	if err != nil {
@@ -134,11 +145,18 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.mu.RLock()
-	user, exists := h.users[tokenModel.UserID]
-	h.mu.RUnlock()
+	var user *models.User
+	if h.repo != nil {
+		user, _ = h.repo.GetByID(context.Background(), tokenModel.UserID)
+	}
 
-	if !exists {
+	if user == nil {
+		h.mu.RLock()
+		user = h.users[tokenModel.UserID]
+		h.mu.RUnlock()
+	}
+
+	if user == nil {
 		user = &models.User{
 			ID:       tokenModel.UserID,
 			Email:    "user@example.com",
@@ -171,11 +189,18 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.mu.RLock()
-	user, exists := h.users[userID]
-	h.mu.RUnlock()
+	var user *models.User
+	if h.repo != nil {
+		user, _ = h.repo.GetByID(r.Context(), userID)
+	}
 
-	if !exists {
+	if user == nil {
+		h.mu.RLock()
+		user = h.users[userID]
+		h.mu.RUnlock()
+	}
+
+	if user == nil {
 		http.Error(w, `{"error":"user not found"}`, http.StatusNotFound)
 		return
 	}

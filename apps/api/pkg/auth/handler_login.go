@@ -1,22 +1,34 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"karma/apps/api/pkg/models"
 )
 
 type LoginRequest struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name,omitempty"`
 }
 
 type LogoutRequest struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+func checkPassword(hash, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
 func (h *AuthHandler) EmailLogin(w http.ResponseWriter, r *http.Request) {
@@ -27,34 +39,63 @@ func (h *AuthHandler) EmailLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := strings.TrimSpace(strings.ToLower(req.Email))
+	password := strings.TrimSpace(req.Password)
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
 		parts := strings.Split(email, "@")
 		name = strings.Title(parts[0])
 	}
 
-	h.mu.Lock()
 	var user *models.User
-	for _, u := range h.users {
-		if strings.EqualFold(u.Email, email) {
-			user = u
-			break
-		}
+	if h.repo != nil {
+		user, _ = h.repo.GetByEmail(context.Background(), email)
 	}
 
 	if user == nil {
-		user = &models.User{
-			ID:          uuid.New(),
-			LinkedInSub: "local_" + uuid.New().String()[:8],
-			Email:       email,
-			Name:        name,
-			PlanTier:    models.PlanTierAccessPlusCredits,
-			CreatedAt:   time.Now().UTC(),
-			UpdatedAt:   time.Now().UTC(),
+		h.mu.RLock()
+		for _, u := range h.users {
+			if strings.EqualFold(u.Email, email) {
+				user = u
+				break
+			}
 		}
-		h.users[user.ID] = user
+		h.mu.RUnlock()
 	}
-	h.mu.Unlock()
+
+	if user != nil {
+		// Existing user: verify password if password was provided and user has password_hash
+		if user.PasswordHash != "" && password != "" {
+			if !checkPassword(user.PasswordHash, password) {
+				http.Error(w, `{"error":"invalid email or password"}`, http.StatusUnauthorized)
+				return
+			}
+		}
+	} else {
+		// New user: register with bcrypt hash
+		pwHash, _ := hashPassword(password)
+		if pwHash == "" {
+			pwHash, _ = hashPassword("demo1234")
+		}
+
+		user = &models.User{
+			ID:           uuid.New(),
+			LinkedInSub:  "local_" + uuid.New().String()[:8],
+			Email:        email,
+			Name:         name,
+			PasswordHash: pwHash,
+			PlanTier:     models.PlanTierAccessPlusCredits,
+			CreatedAt:    time.Now().UTC(),
+			UpdatedAt:    time.Now().UTC(),
+		}
+
+		h.mu.Lock()
+		h.users[user.ID] = user
+		h.mu.Unlock()
+
+		if h.repo != nil {
+			_ = h.repo.CreateUser(context.Background(), user)
+		}
+	}
 
 	resp, err := h.issueAuthTokens(user)
 	if err != nil {

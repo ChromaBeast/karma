@@ -15,15 +15,16 @@ const (
 )
 
 type User struct {
-	ID          uuid.UUID `json:"id"`
-	LinkedInSub string    `json:"linkedin_sub"`
-	Email       string    `json:"email"`
-	Name        string    `json:"name"`
-	AvatarURL   *string   `json:"avatar_url,omitempty"`
-	Headline    *string   `json:"headline,omitempty"`
-	PlanTier    PlanTier  `json:"plan_tier"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           uuid.UUID `json:"id"`
+	LinkedInSub  string    `json:"linkedin_sub"`
+	Email        string    `json:"email"`
+	Name         string    `json:"name"`
+	PasswordHash string    `json:"-"`
+	AvatarURL    *string   `json:"avatar_url,omitempty"`
+	Headline     *string   `json:"headline,omitempty"`
+	PlanTier     PlanTier  `json:"plan_tier"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type RefreshToken struct {
