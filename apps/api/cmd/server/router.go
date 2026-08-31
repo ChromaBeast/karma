@@ -62,6 +62,8 @@ func SetupRouter(deps ServerDependencies) *chi.Mux {
 	r.Route("/v1", func(v1 chi.Router) {
 		// Public auth endpoints
 		v1.Route("/auth", func(a chi.Router) {
+			a.Post("/login", deps.AuthHandler.EmailLogin)
+			a.Post("/logout", deps.AuthHandler.Logout)
 			a.Get("/linkedin/start", deps.AuthHandler.LinkedInStart)
 			a.Post("/linkedin/callback", deps.AuthHandler.LinkedInCallback)
 			a.Post("/refresh", deps.AuthHandler.Refresh)

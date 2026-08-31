@@ -8,6 +8,16 @@ export type CaptureChannel =
 
 export type NodeType = 'role' | 'project' | 'achievement' | 'skill' | 'education';
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  headline?: string;
+  planTier: 'free' | 'access' | 'access_plus_credits';
+  createdAt?: string;
+}
+
 export interface CareerEvent {
   id: string;
   userId: string;

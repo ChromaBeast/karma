@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AuthProvider } from '../context/AuthContext';
 import { AppProvider } from '../context/AppContext';
 import { ToastProvider } from '../context/ToastContext';
 import { Header } from '../components/layout/Header';
@@ -21,19 +22,21 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-background text-foreground antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
         <ToastProvider>
-          <AppProvider>
-            <GlowCursor color="rgba(99, 102, 241, 0.12)" size={400} />
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <div className="flex flex-1">
-                <Sidebar />
-                <main className="flex-1 overflow-y-auto">
-                  {children}
-                </main>
+          <AuthProvider>
+            <AppProvider>
+              <GlowCursor color="rgba(99, 102, 241, 0.12)" size={400} />
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <div className="flex flex-1">
+                  <Sidebar />
+                  <main className="flex-1 overflow-y-auto">
+                    {children}
+                  </main>
+                </div>
               </div>
-            </div>
-            <ToastContainer />
-          </AppProvider>
+              <ToastContainer />
+            </AppProvider>
+          </AuthProvider>
         </ToastProvider>
       </body>
     </html>

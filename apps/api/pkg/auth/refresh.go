@@ -129,6 +129,16 @@ func (m *RefreshTokenManager) RotateToken(rawToken string) (string, *models.Refr
 	return newRawToken, newToken, nil
 }
 
+func (m *RefreshTokenManager) RevokeToken(rawToken string) {
+	tokenHash := HashToken(rawToken)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if t, exists := m.tokens[tokenHash]; exists {
+		now := time.Now().UTC()
+		t.RevokedAt = &now
+	}
+}
+
 func (m *RefreshTokenManager) RevokeFamily(familyID uuid.UUID) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

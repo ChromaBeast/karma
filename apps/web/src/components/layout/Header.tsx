@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ShieldCheck, Plus } from 'lucide-react';
 import { ShinyText } from '@karma/ui';
 import { EventCaptureModal } from '../career/EventCaptureModal';
+import { UserDropdown } from '../auth/UserDropdown';
+import { AuthModal } from '../auth/AuthModal';
 
 export const Header: React.FC = () => {
   const [showCapture, setShowCapture] = useState(false);
@@ -53,16 +55,15 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">Capture Event</span>
           </button>
 
-          {/* User Profile */}
-          <div className="flex items-center gap-2 pl-2 border-l border-neutral-800">
-            <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300 text-xs font-semibold">
-              AS
-            </div>
+          {/* User Profile / Auth State */}
+          <div className="pl-2 border-l border-neutral-800">
+            <UserDropdown />
           </div>
         </div>
       </header>
 
       {showCapture && <EventCaptureModal onClose={() => setShowCapture(false)} />}
+      <AuthModal />
     </>
   );
 };
