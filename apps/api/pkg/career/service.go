@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"karma/apps/api/pkg/cache"
 	"karma/apps/api/pkg/models"
 	"karma/apps/api/pkg/repository"
 )
@@ -16,23 +17,19 @@ var (
 	ErrEventNotFound = errors.New("career event not found")
 )
 
-type NodeFilter struct {
-	NodeType *models.NodeType
-	Tag      *string
-	ParentID *uuid.UUID
-}
-
 type CareerService struct {
 	mu     sync.RWMutex
 	repo   *repository.CareerRepository
 	events map[uuid.UUID]*models.CareerNodeEvent
 	nodes  map[uuid.UUID]*models.CareerNode
+	cache  *cache.MemoryCache[[]*models.CareerNode]
 }
 
 func NewCareerService(repo ...*repository.CareerRepository) *CareerService {
 	svc := &CareerService{
 		events: make(map[uuid.UUID]*models.CareerNodeEvent),
 		nodes:  make(map[uuid.UUID]*models.CareerNode),
+		cache:  cache.NewMemoryCache[[]*models.CareerNode](1*time.Minute, 5000),
 	}
 	if len(repo) > 0 && repo[0] != nil {
 		svc.repo = repo[0]
@@ -100,6 +97,7 @@ func (s *CareerService) processEventAsync(eventID uuid.UUID) {
 		_ = s.repo.CreateNode(context.Background(), node)
 		_ = s.repo.UpdateEventProcessed(context.Background(), event.ID, node.ID, now)
 	}
+	s.cache.Delete(event.UserID.String())
 }
 
 func (s *CareerService) GetEvent(eventID uuid.UUID) (*models.CareerNodeEvent, error) {
@@ -136,6 +134,7 @@ func (s *CareerService) CreateNode(node *models.CareerNode) (*models.CareerNode,
 	if s.repo != nil {
 		_ = s.repo.CreateNode(context.Background(), node)
 	}
+	s.cache.Delete(node.UserID.String())
 	return node, nil
 }
 
@@ -155,46 +154,32 @@ func (s *CareerService) GetNode(nodeID uuid.UUID) (*models.CareerNode, error) {
 }
 
 func (s *CareerService) ListNodes(userID uuid.UUID, filter NodeFilter) []*models.CareerNode {
+	cacheKey := userID.String()
+	if cached, ok := s.cache.Get(cacheKey); ok {
+		return filterNodes(cached, filter)
+	}
+
+	var list []*models.CareerNode
 	if s.repo != nil {
 		if dbNodes, err := s.repo.ListNodes(context.Background(), userID); err == nil && len(dbNodes) > 0 {
-			return filterNodes(dbNodes, filter)
+			list = dbNodes
 		}
 	}
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	var list []*models.CareerNode
-	for _, n := range s.nodes {
-		if n.UserID == userID {
-			list = append(list, n)
+
+	if len(list) == 0 {
+		s.mu.RLock()
+		for _, n := range s.nodes {
+			if n.UserID == userID {
+				list = append(list, n)
+			}
 		}
+		s.mu.RUnlock()
+	}
+
+	if len(list) > 0 {
+		s.cache.Set(cacheKey, list)
 	}
 	return filterNodes(list, filter)
-}
-
-func filterNodes(nodes []*models.CareerNode, filter NodeFilter) []*models.CareerNode {
-	var res []*models.CareerNode
-	for _, node := range nodes {
-		if filter.NodeType != nil && node.NodeType != *filter.NodeType {
-			continue
-		}
-		if filter.ParentID != nil && (node.ParentID == nil || *node.ParentID != *filter.ParentID) {
-			continue
-		}
-		if filter.Tag != nil && !containsTag(node.Tags, *filter.Tag) {
-			continue
-		}
-		res = append(res, node)
-	}
-	return res
-}
-
-func containsTag(tags []string, target string) bool {
-	for _, t := range tags {
-		if t == target {
-			return true
-		}
-	}
-	return false
 }
 
 func (s *CareerService) DeleteNode(userID uuid.UUID, nodeID uuid.UUID) error {
@@ -208,5 +193,6 @@ func (s *CareerService) DeleteNode(userID uuid.UUID, nodeID uuid.UUID) error {
 		return ErrNodeNotFound
 	}
 	delete(s.nodes, nodeID)
+	s.cache.Delete(userID.String())
 	return nil
 }

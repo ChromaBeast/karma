@@ -35,6 +35,8 @@ func SetupRouter(deps ServerDependencies) *chi.Mux {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(middleware.CleanPath)
+	r.Use(middleware.Compress(5))
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
