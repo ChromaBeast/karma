@@ -1,23 +1,30 @@
 package tools
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 type OutreachService struct {
 	mu      sync.RWMutex
+	repo    *repository.ToolsRepository
 	scripts map[uuid.UUID]*models.OutreachScript
 }
 
-func NewOutreachService() *OutreachService {
-	return &OutreachService{
+func NewOutreachService(repo ...*repository.ToolsRepository) *OutreachService {
+	svc := &OutreachService{
 		scripts: make(map[uuid.UUID]*models.OutreachScript),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		svc.repo = repo[0]
+	}
+	return svc
 }
 
 func (s *OutreachService) GenerateOutreach(userID uuid.UUID, channel models.OutreachChannel, company, roleTitle, contactName string) (*models.OutreachScript, []string) {
@@ -48,6 +55,10 @@ func (s *OutreachService) GenerateOutreach(userID uuid.UUID, channel models.Outr
 		},
 		GeneratedText: variants[0],
 		CreatedAt:     time.Now().UTC(),
+	}
+
+	if s.repo != nil {
+		_ = s.repo.SaveOutreachScript(context.Background(), script)
 	}
 
 	s.mu.Lock()

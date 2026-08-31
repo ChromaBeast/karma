@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 var SeededQuestionBanks = map[string][]string{
@@ -25,13 +27,18 @@ var SeededQuestionBanks = map[string][]string{
 
 type InterviewService struct {
 	mu       sync.RWMutex
+	repo     *repository.ToolsRepository
 	sessions map[uuid.UUID]*models.InterviewSession
 }
 
-func NewInterviewService() *InterviewService {
-	return &InterviewService{
+func NewInterviewService(repo ...*repository.ToolsRepository) *InterviewService {
+	svc := &InterviewService{
 		sessions: make(map[uuid.UUID]*models.InterviewSession),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		svc.repo = repo[0]
+	}
+	return svc
 }
 
 func (s *InterviewService) StartSession(userID uuid.UUID, domain, roleTitle string) (*models.InterviewSession, string) {
@@ -50,6 +57,10 @@ func (s *InterviewService) StartSession(userID uuid.UUID, domain, roleTitle stri
 			{Role: "interviewer", Content: initialQuestion},
 		},
 		CreatedAt: time.Now().UTC(),
+	}
+
+	if s.repo != nil {
+		_ = s.repo.SaveInterviewSession(context.Background(), session)
 	}
 
 	s.mu.Lock()
@@ -83,6 +94,10 @@ func (s *InterviewService) SubmitAnswer(sessionID uuid.UUID, answer string) (*mo
 		"critique": fmt.Sprintf("Strong explanation covering core architectural trade-offs. Length: %d chars.", len(answer)),
 	}
 	session.Feedback = feedback
+
+	if s.repo != nil {
+		_ = s.repo.SaveInterviewSession(context.Background(), session)
+	}
 
 	return session, feedback, nil
 }

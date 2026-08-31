@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 	"karma/apps/api/pkg/vault"
 )
 
@@ -31,17 +33,22 @@ type LLMRouter struct {
 	vaultService  *vault.VaultService
 	creditLedger  *CreditLedgerService
 	promptCache   *PromptCacheService
+	repo          *repository.LLMRepository
 	mu            sync.RWMutex
 	executionLogs map[uuid.UUID]*models.LLMExecution
 }
 
-func NewLLMRouter(vSvc *vault.VaultService, cLedger *CreditLedgerService, pCache *PromptCacheService) *LLMRouter {
-	return &LLMRouter{
+func NewLLMRouter(vSvc *vault.VaultService, cLedger *CreditLedgerService, pCache *PromptCacheService, repo ...*repository.LLMRepository) *LLMRouter {
+	r := &LLMRouter{
 		vaultService:  vSvc,
 		creditLedger:  cLedger,
 		promptCache:   pCache,
 		executionLogs: make(map[uuid.UUID]*models.LLMExecution),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		r.repo = repo[0]
+	}
+	return r
 }
 
 func (r *LLMRouter) Execute(userID uuid.UUID, req ExecutionRequest) (*ExecutionResult, error) {
@@ -65,6 +72,9 @@ func (r *LLMRouter) Execute(userID uuid.UUID, req ExecutionRequest) (*ExecutionR
 			CacheHit:      true,
 			Status:        models.StatusSuccess,
 			CreatedAt:     time.Now().UTC(),
+		}
+		if r.repo != nil {
+			_ = r.repo.LogExecution(context.Background(), logEntry)
 		}
 		r.mu.Lock()
 		r.executionLogs[execID] = logEntry
@@ -90,7 +100,6 @@ func (r *LLMRouter) Execute(userID uuid.UUID, req ExecutionRequest) (*ExecutionR
 			return nil, fmt.Errorf("BYOK key unavailable: %w", err)
 		}
 	} else {
-		// Managed mode
 		_, err := r.creditLedger.DeductCredits(userID, costUSD, fmt.Sprintf("Generation: %s", req.Module))
 		if err != nil {
 			return nil, err
@@ -116,6 +125,10 @@ func (r *LLMRouter) Execute(userID uuid.UUID, req ExecutionRequest) (*ExecutionR
 		Status:           models.StatusSuccess,
 		LatencyMS:        120,
 		CreatedAt:        time.Now().UTC(),
+	}
+
+	if r.repo != nil {
+		_ = r.repo.LogExecution(context.Background(), logEntry)
 	}
 
 	r.mu.Lock()

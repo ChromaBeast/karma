@@ -1,23 +1,30 @@
 package tools
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 type LinkedInService struct {
 	mu     sync.RWMutex
+	repo   *repository.ToolsRepository
 	assets map[uuid.UUID]*models.LinkedInAsset
 }
 
-func NewLinkedInService() *LinkedInService {
-	return &LinkedInService{
+func NewLinkedInService(repo ...*repository.ToolsRepository) *LinkedInService {
+	svc := &LinkedInService{
 		assets: make(map[uuid.UUID]*models.LinkedInAsset),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		svc.repo = repo[0]
+	}
+	return svc
 }
 
 func (s *LinkedInService) GenerateHeadline(userID uuid.UUID, roleTitle, topSkills string) (*models.LinkedInAsset, []string) {
@@ -38,6 +45,10 @@ func (s *LinkedInService) GenerateHeadline(userID uuid.UUID, roleTitle, topSkill
 		GeneratedText: variants[0],
 		Status:        models.StatusDraft,
 		CreatedAt:     time.Now().UTC(),
+	}
+
+	if s.repo != nil {
+		_ = s.repo.SaveLinkedInAsset(context.Background(), asset)
 	}
 
 	s.mu.Lock()
@@ -64,6 +75,10 @@ func (s *LinkedInService) GeneratePost(userID uuid.UUID, projectTitle, metricsRe
 		GeneratedText: variants[0],
 		Status:        models.StatusDraft,
 		CreatedAt:     time.Now().UTC(),
+	}
+
+	if s.repo != nil {
+		_ = s.repo.SaveLinkedInAsset(context.Background(), asset)
 	}
 
 	s.mu.Lock()

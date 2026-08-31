@@ -1,22 +1,29 @@
 package tools
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 type SkillGapService struct {
 	mu        sync.RWMutex
+	repo      *repository.ToolsRepository
 	analyses  map[uuid.UUID]*models.SkillGapAnalysis
 }
 
-func NewSkillGapService() *SkillGapService {
-	return &SkillGapService{
+func NewSkillGapService(repo ...*repository.ToolsRepository) *SkillGapService {
+	svc := &SkillGapService{
 		analyses: make(map[uuid.UUID]*models.SkillGapAnalysis),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		svc.repo = repo[0]
+	}
+	return svc
 }
 
 func (s *SkillGapService) AnalyzeGaps(userID uuid.UUID, jd *models.JobDescription, userNodes []*models.CareerNode) *models.SkillGapAnalysis {
@@ -67,6 +74,10 @@ func (s *SkillGapService) AnalyzeGaps(userID uuid.UUID, jd *models.JobDescriptio
 		JobDescriptionID: jdID,
 		GapReport:        report,
 		CreatedAt:        time.Now().UTC(),
+	}
+
+	if s.repo != nil {
+		_ = s.repo.SaveSkillGap(context.Background(), analysis)
 	}
 
 	s.mu.Lock()

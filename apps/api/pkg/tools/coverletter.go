@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -8,17 +9,23 @@ import (
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 type CoverLetterService struct {
 	mu      sync.RWMutex
+	repo    *repository.ToolsRepository
 	letters map[uuid.UUID]*models.CoverLetter
 }
 
-func NewCoverLetterService() *CoverLetterService {
-	return &CoverLetterService{
+func NewCoverLetterService(repo ...*repository.ToolsRepository) *CoverLetterService {
+	svc := &CoverLetterService{
 		letters: make(map[uuid.UUID]*models.CoverLetter),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		svc.repo = repo[0]
+	}
+	return svc
 }
 
 func (s *CoverLetterService) SynthesizeCoverLetter(userID uuid.UUID, jdID *uuid.UUID, company, roleTitle string, highlightNodes []*models.CareerNode) *models.CoverLetter {
@@ -51,6 +58,10 @@ Karma Candidate`, company, roleTitle, highlightsStr)
 		GeneratedText:    body,
 		PDFURL:           &pdfURL,
 		CreatedAt:        time.Now().UTC(),
+	}
+
+	if s.repo != nil {
+		_ = s.repo.SaveCoverLetter(context.Background(), letter)
 	}
 
 	s.mu.Lock()

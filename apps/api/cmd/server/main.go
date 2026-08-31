@@ -67,6 +67,8 @@ func BuildDependencies() ServerDependencies {
 	var portRepo *repository.PortfolioRepository
 	var resumeRepo *repository.ResumeRepository
 	var mockupRepo *repository.MockupRepository
+	var toolsRepo *repository.ToolsRepository
+	var llmRepo *repository.LLMRepository
 	var dbConn *sql.DB
 
 	dbURL := os.Getenv("DATABASE_URL")
@@ -87,6 +89,8 @@ func BuildDependencies() ServerDependencies {
 			portRepo = repository.NewPortfolioRepository(dbConn)
 			resumeRepo = repository.NewResumeRepository(dbConn)
 			mockupRepo = repository.NewMockupRepository(dbConn)
+			toolsRepo = repository.NewToolsRepository(dbConn)
+			llmRepo = repository.NewLLMRepository(dbConn)
 		}
 	} else {
 		log.Println("ℹ️ DATABASE_URL not set — running with in-memory persistence")
@@ -110,9 +114,9 @@ func BuildDependencies() ServerDependencies {
 	resumeSvc := resume.NewResumeService(resumeRepo)
 	resumeH := resume.NewResumeHandler(resumeSvc, careerSvc)
 
-	creditLedger := llm.NewCreditLedgerService()
+	creditLedger := llm.NewCreditLedgerService(llmRepo)
 	promptCache := llm.NewPromptCacheService()
-	llmRouter := llm.NewLLMRouter(vaultSvc, creditLedger, promptCache)
+	llmRouter := llm.NewLLMRouter(vaultSvc, creditLedger, promptCache, llmRepo)
 	llmH := llm.NewLLMHandler(llmRouter, creditLedger)
 
 	portSvc := portfolio.NewPortfolioService(portRepo)
@@ -121,11 +125,11 @@ func BuildDependencies() ServerDependencies {
 	mockupSvc := mockup.NewMockupService(mockupRepo)
 	mockupH := mockup.NewMockupHandler(mockupSvc)
 
-	liSvc := tools.NewLinkedInService()
-	intSvc := tools.NewInterviewService()
-	clSvc := tools.NewCoverLetterService()
-	outSvc := tools.NewOutreachService()
-	sgSvc := tools.NewSkillGapService()
+	liSvc := tools.NewLinkedInService(toolsRepo)
+	intSvc := tools.NewInterviewService(toolsRepo)
+	clSvc := tools.NewCoverLetterService(toolsRepo)
+	outSvc := tools.NewOutreachService(toolsRepo)
+	sgSvc := tools.NewSkillGapService(toolsRepo)
 	toolsH := tools.NewToolsHandler(liSvc, intSvc, clSvc, outSvc, sgSvc, careerSvc, resumeSvc)
 
 	rateLimiter := NewRateLimiter(100, 1*time.Minute)
