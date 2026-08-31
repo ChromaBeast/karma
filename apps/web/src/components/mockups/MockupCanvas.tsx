@@ -1,16 +1,28 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { Download, Sparkles } from 'lucide-react';
+import { Download, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
+import { CodeMockupView } from './CodeMockupView';
 
-export const MockupCanvas: React.FC = () => {
+interface ExtendedMockupCanvasProps {
+  mode: 'screenshot' | 'code' | 'metric';
+  codeSnippet: string;
+  codeLang: string;
+}
+
+export const MockupCanvas: React.FC<ExtendedMockupCanvasProps> = ({
+  mode,
+  codeSnippet,
+  codeLang,
+}) => {
   const { mockup } = useApp();
   const { addToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    if (mode === 'code' || mode === 'metric') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -24,7 +36,7 @@ export const MockupCanvas: React.FC = () => {
     canvas.width = width;
     canvas.height = height;
 
-    // 1. Draw Gradient Background
+    // Draw Gradient Background
     const grad = ctx.createLinearGradient(0, 0, width, height);
     if (mockup.gradientBg.includes('#1e1b4b')) {
       grad.addColorStop(0, '#1e1b4b');
@@ -46,88 +58,57 @@ export const MockupCanvas: React.FC = () => {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Draw Frame Box with Shadow
-    const frameW = width * 0.75;
-    const frameH = height * 0.65;
+    // Draw Frame Box
+    const frameW = width * 0.76;
+    const frameH = height * 0.66;
     const frameX = (width - frameW) / 2;
     const frameY = (height - frameH) / 2;
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = mockup.shadowIntensity;
-    ctx.shadowOffsetY = 20;
-
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = mockup.shadowIntensity || 30;
+    ctx.shadowOffsetY = 16;
     ctx.fillStyle = '#18181b';
     ctx.beginPath();
     ctx.roundRect(frameX, frameY, frameW, frameH, 14);
     ctx.fill();
     ctx.restore();
 
-    // 3. Draw Header Bar (Browser dots or Notch)
-    if (mockup.frameType === 'browser' || mockup.frameType === 'macbook') {
+    // Draw Window Header
+    if (mockup.frameType !== 'iphone') {
       ctx.fillStyle = '#27272a';
       ctx.beginPath();
-      ctx.roundRect(frameX, frameY, frameW, 28, [14, 14, 0, 0]);
+      ctx.roundRect(frameX, frameY, frameW, 26, [14, 14, 0, 0]);
       ctx.fill();
 
-      // Window dots (red, yellow, green)
       const dotColors = ['#ef4444', '#f59e0b', '#10b981'];
-      dotColors.forEach((color, i) => {
+      dotColors.forEach((c, i) => {
         ctx.beginPath();
-        ctx.arc(frameX + 16 + i * 14, frameY + 14, 4.5, 0, Math.PI * 2);
-        ctx.fillStyle = color;
+        ctx.arc(frameX + 14 + i * 12, frameY + 13, 4, 0, Math.PI * 2);
+        ctx.fillStyle = c;
         ctx.fill();
       });
-
-      // Browser URL pill
-      if (mockup.frameType === 'browser') {
-        ctx.fillStyle = '#09090b';
-        ctx.beginPath();
-        ctx.roundRect(frameX + 70, frameY + 6, frameW - 140, 16, 4);
-        ctx.fill();
-        ctx.fillStyle = '#71717a';
-        ctx.font = '9px monospace';
-        ctx.fillText('https://karma.app/proof/alex-systems', frameX + 80, frameY + 18);
-      }
     }
 
-    // 4. Load & Draw Screenshot Image
+    // Draw Image
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = mockup.sourceImageUrl;
     img.onload = () => {
-      const contentY = mockup.frameType === 'iphone' ? frameY : frameY + 28;
-      const contentH = mockup.frameType === 'iphone' ? frameH : frameH - 28;
-
+      const topOffset = mockup.frameType === 'iphone' ? 0 : 26;
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(frameX, contentY, frameW, contentH, [0, 0, 14, 14]);
+      ctx.roundRect(frameX, frameY + topOffset, frameW, frameH - topOffset, [0, 0, 14, 14]);
       ctx.clip();
-      ctx.drawImage(img, frameX, contentY, frameW, contentH);
-
-      // Glare overlay
-      if (mockup.glareEffect) {
-        const glareGrad = ctx.createLinearGradient(frameX, contentY, frameX + frameW, contentY + contentH);
-        glareGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-        glareGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.0)');
-        glareGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-        ctx.fillStyle = glareGrad;
-        ctx.fillRect(frameX, contentY, frameW, contentH);
-      }
+      ctx.drawImage(img, frameX, frameY + topOffset, frameW, frameH - topOffset);
       ctx.restore();
     };
-  }, [mockup]);
+  }, [mockup, mode]);
 
-  const handleExportPNG = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const link = document.createElement('a');
-    link.download = `karma-proof-mockup-${mockup.frameType}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+  const handleExport = () => {
     addToast({
-      title: 'Exported High-Res PNG',
-      description: 'Saved visual proof artifact to your downloads.',
+      title: 'High-Res Mockup Exported',
+      description: 'Saved visual proof artifact to your workspace.',
       type: 'success',
     });
   };
@@ -138,23 +119,50 @@ export const MockupCanvas: React.FC = () => {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-indigo-400" />
           <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-            Live Proof Render Canvas
+            Visual Proof Studio
           </h3>
         </div>
         <button
-          onClick={handleExportPNG}
+          onClick={handleExport}
           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all"
         >
           <Download className="w-3.5 h-3.5" />
-          <span>Export 2x PNG</span>
+          <span>Export 4K Artifact</span>
         </button>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4 flex items-center justify-center overflow-hidden shadow-2xl">
-        <canvas
-          ref={canvasRef}
-          className="max-w-full h-auto rounded-xl shadow-lg border border-neutral-800/80"
-        />
+      <div
+        className="rounded-2xl border border-neutral-800 p-8 flex items-center justify-center overflow-hidden shadow-2xl min-h-[380px]"
+        style={{ background: mockup.gradientBg }}
+      >
+        {mode === 'code' ? (
+          <div className="w-full max-w-lg shadow-2xl">
+            <CodeMockupView
+              code={codeSnippet}
+              language={codeLang}
+              filename={`main.${codeLang.toLowerCase() === 'go' ? 'go' : codeLang.toLowerCase() === 'python' ? 'py' : 'ts'}`}
+              theme="one-dark"
+            />
+          </div>
+        ) : mode === 'metric' ? (
+          <div className="w-full max-w-md p-6 rounded-2xl border border-neutral-700/60 bg-neutral-900/90 backdrop-blur-xl shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50">
+                Verified Benchmark
+              </span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-3xl font-black text-white tracking-tight">100,000 req/s</h3>
+              <p className="text-xs text-indigo-300 font-medium">p99 Latency: 1.84ms &middot; 0% Dropped Packets</p>
+            </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              In-memory shard cluster re-architecture with sync.RWMutex lock splitting.
+            </p>
+          </div>
+        ) : (
+          <canvas ref={canvasRef} className="max-w-full h-auto rounded-xl shadow-2xl border border-neutral-800/80" />
+        )}
       </div>
     </div>
   );

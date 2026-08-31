@@ -11,6 +11,8 @@ import {
   Globe2,
   KeyRound,
   Wand2,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@karma/ui';
 import { useApp } from '../../context/AppContext';
@@ -19,10 +21,12 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/career', label: 'Career Graph', icon: GitGraph },
   { href: '/resume', label: 'ATS Resumes', icon: FileText },
-  { href: '/mockups', label: 'Proof Mockups', icon: MonitorPlay },
+  { href: '/mockups', label: 'Proof & Code Studio', icon: MonitorPlay },
   { href: '/portfolio', label: 'Portfolio CMS', icon: Globe2 },
   { href: '/vault', label: 'BYOK Vault', icon: KeyRound },
   { href: '/tools', label: 'Career Tools', icon: Wand2 },
+  { href: '/components', label: 'UI Component Hub', icon: Layers },
+  { href: '/onboarding', label: 'Quick Setup Wizard', icon: Sparkles },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -45,7 +49,7 @@ export const Sidebar: React.FC = () => {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all group',
+                  'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all group',
                   isActive
                     ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-sm'
                     : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/60'

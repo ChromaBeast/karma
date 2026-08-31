@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Laptop, Smartphone, Globe, Share2, Upload, Link as LinkIcon } from 'lucide-react';
+import { Laptop, Smartphone, Globe, Share2, Upload, Code2, Sparkles, Image as ImageIcon } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { MockupConfig } from '../../lib/types';
@@ -15,12 +15,28 @@ const FRAMES: { id: MockupConfig['frameType']; label: string; icon: React.Elemen
 
 const GRADIENTS = [
   { label: 'Indigo Night', value: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)' },
-  { label: 'Cyberpunk Purple', value: 'linear-gradient(135deg, #581c87 0%, #7e22ce 50%, #db2777 100%)' },
+  { label: 'Cyberpunk', value: 'linear-gradient(135deg, #581c87 0%, #7e22ce 50%, #db2777 100%)' },
   { label: 'Emerald Deep', value: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #0d9488 100%)' },
-  { label: 'Obsidian Minimal', value: 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #09090b 100%)' },
+  { label: 'Obsidian Slate', value: 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #09090b 100%)' },
 ];
 
-export const MockupControls: React.FC = () => {
+interface ExtendedMockupControlsProps {
+  mode: 'screenshot' | 'code' | 'metric';
+  setMode: (m: 'screenshot' | 'code' | 'metric') => void;
+  codeSnippet: string;
+  setCodeSnippet: (c: string) => void;
+  codeLang: string;
+  setCodeLang: (l: string) => void;
+}
+
+export const MockupControls: React.FC<ExtendedMockupControlsProps> = ({
+  mode,
+  setMode,
+  codeSnippet,
+  setCodeSnippet,
+  codeLang,
+  setCodeLang,
+}) => {
   const { mockup, setMockup } = useApp();
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,56 +62,113 @@ export const MockupControls: React.FC = () => {
 
   return (
     <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5">
-      {/* Frame Selector */}
+      {/* Studio Mode Selector */}
       <div>
         <label className="block text-xs font-semibold text-white mb-2 uppercase tracking-wider">
-          Device Frame Style
+          Proof Mode
         </label>
-        <div className="grid grid-cols-2 gap-2">
-          {FRAMES.map((f) => {
-            const Icon = f.icon;
-            const isSelected = mockup.frameType === f.id;
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { id: 'screenshot', label: 'Device Frame', icon: ImageIcon },
+            { id: 'code', label: 'Code Snippet', icon: Code2 },
+            { id: 'metric', label: 'Metric Card', icon: Sparkles },
+          ].map((m) => {
+            const Icon = m.icon;
+            const isSelected = mode === m.id;
             return (
               <button
-                key={f.id}
-                onClick={() => setMockup((prev) => ({ ...prev, frameType: f.id }))}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                key={m.id}
+                onClick={() => setMode(m.id as any)}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border text-xs font-semibold transition-all ${
                   isSelected
-                    ? 'border-indigo-500 bg-indigo-950/60 text-indigo-300 shadow-sm'
-                    : 'border-neutral-800 bg-neutral-950/40 text-neutral-400 hover:text-neutral-200'
+                    ? 'border-indigo-500 bg-indigo-950/60 text-white shadow-sm'
+                    : 'border-neutral-800 bg-neutral-950/40 text-neutral-400 hover:text-white'
                 }`}
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span className="truncate">{f.label}</span>
+                <Icon className="w-3.5 h-3.5" />
+                <span className="truncate">{m.label}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Aspect Ratio */}
-      <div>
-        <label className="block text-xs font-semibold text-white mb-2 uppercase tracking-wider">
-          Aspect Ratio
-        </label>
-        <div className="flex gap-2">
-          {(['16:9', '4:3', '1:1'] as MockupConfig['aspectRatio'][]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setMockup((prev) => ({ ...prev, aspectRatio: r }))}
-              className={`flex-1 py-1.5 rounded-xl border text-xs font-mono font-medium transition-all ${
-                mockup.aspectRatio === r
-                  ? 'border-indigo-500 bg-indigo-950/60 text-white'
-                  : 'border-neutral-800 bg-neutral-950/40 text-neutral-400'
-              }`}
+      {mode === 'code' ? (
+        /* Code Mode Controls */
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-medium text-neutral-300">
+              Source Code
+            </label>
+            <select
+              value={codeLang}
+              onChange={(e) => setCodeLang(e.target.value)}
+              className="px-2.5 py-1 rounded-lg border border-neutral-800 bg-neutral-950 text-xs text-white font-mono"
             >
-              {r}
-            </button>
-          ))}
+              <option value="Go">Go</option>
+              <option value="TypeScript">TypeScript</option>
+              <option value="Rust">Rust</option>
+              <option value="Python">Python</option>
+              <option value="SQL">SQL</option>
+            </select>
+          </div>
+          <textarea
+            rows={7}
+            value={codeSnippet}
+            onChange={(e) => setCodeSnippet(e.target.value)}
+            placeholder="Paste code snippet..."
+            className="w-full p-3 rounded-xl border border-neutral-800 bg-neutral-950 text-xs font-mono text-white placeholder-neutral-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
+          />
         </div>
-      </div>
+      ) : (
+        /* Device Frame Controls */
+        <>
+          <div>
+            <label className="block text-xs font-semibold text-white mb-2 uppercase tracking-wider">
+              Frame Style
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {FRAMES.map((f) => {
+                const Icon = f.icon;
+                const isSelected = mockup.frameType === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setMockup((prev) => ({ ...prev, frameType: f.id }))}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'border-indigo-500 bg-indigo-950/60 text-indigo-300 shadow-sm'
+                        : 'border-neutral-800 bg-neutral-950/40 text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{f.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Backdrop Gradient */}
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-indigo-500/40 bg-indigo-950/20 hover:bg-indigo-950/30 text-indigo-300 text-xs font-semibold transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Upload Custom Screenshot</span>
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Backdrop Gradients */}
       <div>
         <label className="block text-xs font-semibold text-white mb-2 uppercase tracking-wider">
           Backdrop Gradient
@@ -111,46 +184,10 @@ export const MockupControls: React.FC = () => {
                   : 'border-neutral-800 text-neutral-400 hover:text-neutral-200'
               }`}
             >
-              <span className="w-4 h-4 rounded-full shrink-0 shadow-sm" style={{ background: g.value }} />
+              <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm" style={{ background: g.value }} />
               <span className="truncate">{g.label}</span>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Custom Image Upload & URL */}
-      <div className="space-y-2">
-        <label className="block text-xs font-semibold text-white uppercase tracking-wider">
-          Screenshot Image
-        </label>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
-
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-indigo-500/40 bg-indigo-950/20 hover:bg-indigo-950/30 text-indigo-300 text-xs font-semibold transition-colors"
-        >
-          <Upload className="w-4 h-4" />
-          <span>Upload Image from Computer</span>
-        </button>
-
-        <div className="flex items-center gap-2 pt-1">
-          <div className="relative flex-1">
-            <LinkIcon className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={mockup.sourceImageUrl}
-              onChange={(e) => setMockup((prev) => ({ ...prev, sourceImageUrl: e.target.value }))}
-              placeholder="Or paste image URL (https://...)"
-              className="w-full pl-8 pr-3 py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white placeholder-neutral-500 focus:border-indigo-500 focus:outline-none font-mono"
-            />
-          </div>
         </div>
       </div>
     </div>
