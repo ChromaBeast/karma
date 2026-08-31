@@ -1,65 +1,49 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { HeroSection } from '../components/landing/HeroSection';
+import { SocialProofBar } from '../components/landing/SocialProofBar';
+import { InteractiveDemoSection } from '../components/landing/InteractiveDemoSection';
 import { PillarsGrid } from '../components/landing/PillarsGrid';
+import { ComparisonSection } from '../components/landing/ComparisonSection';
+import { TestimonialsSection } from '../components/landing/TestimonialsSection';
 import { PricingSection } from '../components/landing/PricingSection';
-import { OverviewMetrics } from '../components/dashboard/OverviewMetrics';
-import { QuickActionsBar } from '../components/dashboard/QuickActionsBar';
-import { CareerNodeCard } from '../components/career/CareerNodeCard';
-import { useApp } from '../context/AppContext';
+import { FaqSection } from '../components/landing/FaqSection';
+import { CtaBanner } from '../components/landing/CtaBanner';
+import { LandingFooter } from '../components/landing/LandingFooter';
 
 export default function HomePage() {
-  const { nodes } = useApp();
-
   return (
-    <div className="relative min-h-screen p-6 max-w-7xl mx-auto space-y-10">
-      {/* Hero Welcome & Value Proposition */}
+    <div className="relative min-h-screen p-4 sm:p-8 max-w-6xl mx-auto space-y-16 sm:space-y-20">
+      {/* 1. Hero & Value Proposition */}
       <HeroSection />
 
-      {/* Overview Metrics Bar */}
-      <OverviewMetrics />
+      {/* 2. Live Social Proof & Engineering Stats */}
+      <SocialProofBar />
 
-      {/* Four Core Architectural Pillars */}
+      {/* 3. Interactive Workflow Demos */}
+      <InteractiveDemoSection />
+
+      {/* 4. Core Architecture Pillars */}
       <PillarsGrid />
 
-      {/* Quick Actions & Automation */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 px-1">
-          Product Modules & Workflows
-        </h3>
-        <QuickActionsBar />
-      </div>
+      {/* 5. Legacy Resume vs Karma Comparison Matrix */}
+      <ComparisonSection />
 
-      {/* Recent Career Graph Artifacts */}
-      {nodes.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <div>
-              <h3 className="text-sm font-bold text-white">Live Career Graph Nodes</h3>
-              <p className="text-xs text-neutral-500">Structured STAR & XYZ achievement nodes in Neon PostgreSQL</p>
-            </div>
-            <Link
-              href="/career"
-              className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium"
-            >
-              <span>View All ({nodes.length})</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+      {/* 6. Wall of Proof & Testimonials */}
+      <TestimonialsSection />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {nodes.slice(0, 2).map((node) => (
-              <CareerNodeCard key={node.id} node={node} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Pricing / Access Tiers */}
+      {/* 7. Transparent One-Time Pricing Model */}
       <PricingSection />
+
+      {/* 8. Frequently Asked Questions Accordion */}
+      <FaqSection />
+
+      {/* 9. Final Call To Action Banner */}
+      <CtaBanner />
+
+      {/* 10. Footer */}
+      <LandingFooter />
     </div>
   );
 }
