@@ -91,45 +91,56 @@ async function request<T>(endpoint: string, options: RequestInit = {}, retry = t
 }
 
 export const api = {
-  // Auth & Token Rotation
+  // 1. Auth & Session
   login: async (email: string, password?: string, name?: string): Promise<AuthSession> => {
-    const data = await request<any>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name }),
-    }, false);
+    const data = await request<any>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password, name }) }, false);
     setTokens(data.access_token, data.refresh_token);
     return { accessToken: data.access_token, refreshToken: data.refresh_token, user: data.user };
   },
-
   logout: async (): Promise<void> => {
     if (currentRefreshToken) {
-      await request('/auth/logout', {
-        method: 'POST',
-        body: JSON.stringify({ refresh_token: currentRefreshToken }),
-      }, false).catch(() => {});
+      await request('/auth/logout', { method: 'POST', body: JSON.stringify({ refresh_token: currentRefreshToken }) }, false).catch(() => {});
     }
     setTokens(null, null);
   },
+  getMe: async (): Promise<User> => request<User>('/auth/me'),
+  refreshSession: async (): Promise<string | null> => executeRefresh(),
 
-  getMe: async (): Promise<User> => {
-    return request<User>('/auth/me');
-  },
-
-  refreshSession: async (): Promise<string | null> => {
-    return executeRefresh();
-  },
-
-  // Career Graph
+  // 2. Career Graph & Events
   getCareerNodes: async (): Promise<CareerNode[]> => request<CareerNode[]>('/career-nodes'),
   createCareerNode: async (node: Partial<CareerNode>): Promise<CareerNode> => request<CareerNode>('/career-nodes', { method: 'POST', body: JSON.stringify(node) }),
   deleteCareerNode: async (id: string): Promise<{ success: boolean }> => request<{ success: boolean }>(`/career-nodes/${id}`, { method: 'DELETE' }),
   postCareerEvent: async (rawText: string, captureChannel: string): Promise<CareerEvent> => request<CareerEvent>('/career-events', { method: 'POST', body: JSON.stringify({ raw_text: rawText, capture_channel: captureChannel }) }),
 
-  // BYOK Vault
+  // 3. BYOK Vault
   getVaultKeys: async (): Promise<VaultKey[]> => request<VaultKey[]>('/vault/keys'),
   saveVaultKey: async (provider: string, apiKey: string): Promise<VaultKey> => request<VaultKey>('/vault/keys', { method: 'POST', body: JSON.stringify({ provider, api_key: apiKey }) }),
   deleteVaultKey: async (provider: string): Promise<{ success: boolean }> => request<{ success: boolean }>(`/vault/keys/${provider}`, { method: 'DELETE' }),
 
-  // Resume Generation
+  // 4. ATS Resumes
   generateResume: async (rawJD: string, templateId: string): Promise<GeneratedResume> => request<GeneratedResume>('/resumes/generate', { method: 'POST', body: JSON.stringify({ raw_jd: rawJD, template_id: templateId }) }),
+  getResumes: async (): Promise<GeneratedResume[]> => request<GeneratedResume[]>('/resumes'),
+
+  // 5. Portfolio CMS
+  getPortfolio: async (): Promise<any> => request<any>('/portfolios/me'),
+  upsertPortfolio: async (themeId: string, subdomain: string, config: any): Promise<any> => request<any>('/portfolios', { method: 'POST', body: JSON.stringify({ theme_id: themeId, subdomain, config }) }),
+  publishPortfolio: async (): Promise<any> => request<any>('/portfolios/publish', { method: 'PUT' }),
+  setPortfolioProjects: async (careerNodeIds: string[]): Promise<any> => request<any>('/portfolios/projects', { method: 'POST', body: JSON.stringify({ career_node_ids: careerNodeIds }) }),
+
+  // 6. Proof Mockups
+  generateMockup: async (sourceImageUrl: string, assetType = 'device_frame', params = {}): Promise<any> => request<any>('/mockups/generate', { method: 'POST', body: JSON.stringify({ source_image_url: sourceImageUrl, asset_type: assetType, params }) }),
+  getMockups: async (): Promise<any[]> => request<any[]>('/mockups'),
+
+  // 7. Career Acceleration Tools
+  generateHeadline: async (roleTitle: string, topSkills: string): Promise<any> => request<any>('/tools/linkedin/headline', { method: 'POST', body: JSON.stringify({ role_title: roleTitle, top_skills: topSkills }) }),
+  generatePost: async (projectTitle: string, metricsResult: string): Promise<any> => request<any>('/tools/linkedin/post', { method: 'POST', body: JSON.stringify({ project_title: projectTitle, metrics_result: metricsResult }) }),
+  startInterview: async (domain: string, roleTitle: string): Promise<any> => request<any>('/tools/interview/start', { method: 'POST', body: JSON.stringify({ domain, role_title: roleTitle }) }),
+  submitInterviewAnswer: async (sessionId: string, answer: string): Promise<any> => request<any>('/tools/interview/answer', { method: 'POST', body: JSON.stringify({ session_id: sessionId, answer }) }),
+  generateCoverLetter: async (company: string, roleTitle: string, jdId?: string): Promise<any> => request<any>('/tools/cover-letter', { method: 'POST', body: JSON.stringify({ company, role_title: roleTitle, job_description_id: jdId }) }),
+  generateOutreach: async (channel: string, company: string, roleTitle: string, contactName: string): Promise<any> => request<any>('/tools/outreach', { method: 'POST', body: JSON.stringify({ channel, company, role_title: roleTitle, contact_name: contactName }) }),
+  analyzeSkillGap: async (jdId?: string): Promise<any> => request<any>('/tools/skill-gap', { method: 'POST', body: JSON.stringify({ job_description_id: jdId }) }),
+
+  // 8. LLM Router & Credits
+  getCredits: async (): Promise<{ balance: number }> => request<{ balance: number }>('/llm/credits'),
+  executeLLM: async (prompt: string, provider: string, model: string): Promise<any> => request<any>('/llm/execute', { method: 'POST', body: JSON.stringify({ prompt, provider, model }) }),
 };
