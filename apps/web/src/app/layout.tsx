@@ -4,7 +4,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { AppProvider } from '../context/AppContext';
 import { ToastProvider } from '../context/ToastContext';
 import { Header } from '../components/layout/Header';
-import { Sidebar } from '../components/layout/Sidebar';
+import { AppShell } from '../components/layout/AppShell';
 import { ToastContainer } from '../components/layout/Toast';
 import { GlowCursor } from '@karma/ui';
 
@@ -27,12 +27,9 @@ export default function RootLayout({
               <GlowCursor color="rgba(99, 102, 241, 0.12)" size={400} />
               <div className="flex min-h-screen flex-col">
                 <Header />
-                <div className="flex flex-1">
-                  <Sidebar />
-                  <main className="flex-1 overflow-y-auto">
-                    {children}
-                  </main>
-                </div>
+                <AppShell>
+                  {children}
+                </AppShell>
               </div>
               <ToastContainer />
             </AppProvider>
