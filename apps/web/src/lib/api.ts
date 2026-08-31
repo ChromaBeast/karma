@@ -123,6 +123,7 @@ export const api = {
 
   // 5. Portfolio CMS
   getPortfolio: async (): Promise<any> => request<any>('/portfolios/me'),
+  getPublicPortfolio: async (subdomain: string): Promise<any> => request<any>(`/portfolios/public/${subdomain}`, {}, false),
   upsertPortfolio: async (themeId: string, subdomain: string, config: any): Promise<any> => request<any>('/portfolios', { method: 'POST', body: JSON.stringify({ theme_id: themeId, subdomain, config }) }),
   publishPortfolio: async (): Promise<any> => request<any>('/portfolios/publish', { method: 'PUT' }),
   setPortfolioProjects: async (careerNodeIds: string[]): Promise<any> => request<any>('/portfolios/projects', { method: 'POST', body: JSON.stringify({ career_node_ids: careerNodeIds }) }),

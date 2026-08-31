@@ -1,11 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export const EventPoller: React.FC = () => {
   const { events } = useApp();
+
+  if (events.length === 0) {
+    return (
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-3.5 flex items-center justify-between text-xs text-neutral-400">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-indigo-400" />
+          <span>Real-time event parser active — captured notes are structured in background.</span>
+        </div>
+        <span className="font-mono text-[10px] text-neutral-500">Pipeline Ready</span>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 space-y-3">

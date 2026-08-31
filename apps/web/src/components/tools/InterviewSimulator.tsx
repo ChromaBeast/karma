@@ -2,18 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mic, Play, Pause, CheckCircle, Sparkles, RefreshCw } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../lib/api';
 
-const DEFAULT_QUESTIONS = [
-  'Tell me about a time you resolved a major system latency degradation in production.',
-  'How do you approach database schema design when combining vector search with relational metadata?',
-  'Describe how you scaled an engineering team through a critical infrastructure migration.',
+const TRACKS = [
+  { id: 'system_architecture', label: 'System Architecture' },
+  { id: 'backend_engineering', label: 'Backend Engineering' },
+  { id: 'distributed_systems', label: 'Distributed Systems' },
+  { id: 'leadership_star', label: 'Leadership & STAR' },
+  { id: 'algorithms', label: 'Algorithms & Concurrency' },
 ];
 
 export const InterviewSimulator: React.FC = () => {
+  const { jobDescription } = useApp();
   const { addToast } = useToast();
-  const [question, setQuestion] = useState(DEFAULT_QUESTIONS[0]);
+  const [selectedTrack, setSelectedTrack] = useState(TRACKS[0].id);
+  const [roleTitle, setRoleTitle] = useState(jobDescription.roleTitle || 'Senior Software Engineer');
+  const [question, setQuestion] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -32,20 +38,23 @@ export const InterviewSimulator: React.FC = () => {
   const handleStartSession = async () => {
     setIsLoading(true);
     try {
-      const res = await api.startInterview('distributed_systems', 'Staff Systems Engineer');
+      const res = await api.startInterview(selectedTrack, roleTitle);
       if (res?.session?.id) {
         setSessionId(res.session.id);
         if (res.initial_question) setQuestion(res.initial_question);
+      } else {
+        setQuestion(`Describe how you architect a resilient service in ${roleTitle} handling sudden traffic spikes.`);
       }
       setIsActive(true);
       setTimerSeconds(0);
       setFeedback(null);
       addToast({
         title: 'Interview Session Started',
-        description: 'Timer is running. Structure your STAR answer.',
+        description: `Practicing for ${roleTitle} (${selectedTrack.replace(/_/g, ' ')}).`,
         type: 'info',
       });
     } catch {
+      setQuestion(`Tell me about a high-impact technical challenge you resolved in your recent work.`);
       setIsActive(true);
     } finally {
       setIsLoading(false);
@@ -58,21 +67,17 @@ export const InterviewSimulator: React.FC = () => {
     try {
       if (sessionId) {
         const res = await api.submitInterviewAnswer(sessionId, candidateNotes);
-        if (res?.feedback) {
-          setFeedback(res.feedback);
-        }
+        if (res?.feedback) setFeedback(res.feedback);
       } else {
-        setFeedback(
-          'Solid STAR framework breakdown. The situation and quantifiable outcome were clear. Recommendation: Emphasize trade-offs evaluated before selecting your approach.'
-        );
+        setFeedback('Answer evaluated. Clear technical breakdown with measurable impact.');
       }
       addToast({
         title: 'Answer Evaluated',
-        description: 'STAR structure and technical depth rubric scored.',
+        description: 'STAR rubric and technical score generated.',
         type: 'success',
       });
     } catch {
-      setFeedback('Good structure. Highlight trade-offs evaluated during system design.');
+      setFeedback('Structured answer received. Consider emphasizing trade-offs evaluated before selecting your solution.');
     } finally {
       setIsLoading(false);
     }
@@ -91,10 +96,10 @@ export const InterviewSimulator: React.FC = () => {
           <Mic className="w-5 h-5 text-purple-400" />
           <div>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-              Mock Technical Interview Simulator
+              Technical &amp; STAR Interview Simulator
             </h3>
             <p className="text-[11px] text-neutral-400">
-              Practice answering behavioral &amp; system architecture questions with STAR scoring
+              Practice timed technical and behavioral questions tailored to your target role
             </p>
           </div>
         </div>
@@ -106,28 +111,54 @@ export const InterviewSimulator: React.FC = () => {
           <button
             onClick={isActive ? () => setIsActive(false) : handleStartSession}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20"
           >
             {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : isActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            <span>{isActive ? 'Pause' : 'New Question'}</span>
+            <span>{isActive ? 'Pause' : question ? 'Next Question' : 'Start Session'}</span>
           </button>
         </div>
       </div>
 
-      <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
-        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Target Question</span>
-        <p className="text-sm font-semibold text-white leading-relaxed">{question}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-medium text-neutral-400 mb-1">Interview Track</label>
+          <select
+            value={selectedTrack}
+            onChange={(e) => setSelectedTrack(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white focus:outline-none"
+          >
+            {TRACKS.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-medium text-neutral-400 mb-1">Target Role</label>
+          <input
+            type="text"
+            value={roleTitle}
+            onChange={(e) => setRoleTitle(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white focus:outline-none"
+          />
+        </div>
       </div>
+
+      {question && (
+        <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-1.5">
+          <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Target Question</span>
+          <p className="text-sm font-semibold text-white leading-relaxed">{question}</p>
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="block text-xs font-medium text-neutral-300">
-          Your Answer / Structured Notes (Situation &rarr; Task &rarr; Action &rarr; Result)
+          Your Answer / Notes (Situation &rarr; Task &rarr; Action &rarr; Result)
         </label>
         <textarea
           rows={4}
           value={candidateNotes}
           onChange={(e) => setCandidateNotes(e.target.value)}
-          placeholder="Outline what happened, your actions, and the measurable impact..."
+          placeholder="Structure your answer with quantifiable metrics and engineering trade-offs..."
           className="w-full px-3 py-2.5 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white placeholder-neutral-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
         />
       </div>
@@ -139,7 +170,7 @@ export const InterviewSimulator: React.FC = () => {
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-semibold shadow-md shadow-purple-600/20"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>{isLoading ? 'Evaluating...' : 'Evaluate Answer'}</span>
+          <span>{isLoading ? 'Evaluating...' : 'Score Answer'}</span>
         </button>
       </div>
 

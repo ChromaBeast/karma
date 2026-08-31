@@ -3,19 +3,38 @@
 import React from 'react';
 import { Palette, Sparkles, Layout, Box } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import { PortfolioConfig } from '../../lib/types';
+import { api } from '../../lib/api';
 
 const THEMES: { id: PortfolioConfig['themeId']; name: string; desc: string; icon: React.ElementType }[] = [
   { id: 'dark-glass', name: 'Dark Glassmorphism', desc: 'Sleek dark backdrop with frosted glass accents & neon glows', icon: Sparkles },
   { id: 'modern-bento', name: 'Modern Bento Grid', desc: 'Asymmetrical modular cards with proximity lighting', icon: Layout },
-  { id: 'minimal', name: 'Minimalist Clean', desc: 'Monochrome high-contrast layout emphasizing system design diagrams', icon: Box },
+  { id: 'minimal', name: 'Minimalist Clean', desc: 'Monochrome high-contrast layout emphasizing architecture specs', icon: Box },
 ];
 
 export const ThemeSelector: React.FC = () => {
   const { portfolio, setPortfolio } = useApp();
+  const { addToast } = useToast();
+
+  const handleSelectTheme = async (themeId: PortfolioConfig['themeId']) => {
+    setPortfolio((prev) => ({ ...prev, themeId }));
+    if (portfolio.subdomain) {
+      try {
+        await api.upsertPortfolio(themeId, portfolio.subdomain, {});
+        addToast({
+          title: 'Theme Updated',
+          description: `Active template set to ${themeId}.`,
+          type: 'info',
+        });
+      } catch {
+        // Local state updated
+      }
+    }
+  };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-4">
+    <div className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5">
       <div className="flex items-center gap-2">
         <Palette className="w-4 h-4 text-indigo-400" />
         <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
@@ -30,8 +49,8 @@ export const ThemeSelector: React.FC = () => {
           return (
             <div
               key={t.id}
-              onClick={() => setPortfolio((prev) => ({ ...prev, themeId: t.id }))}
-              className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+              onClick={() => handleSelectTheme(t.id)}
+              className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
                 isSelected
                   ? 'border-indigo-500 bg-indigo-950/40 shadow-sm'
                   : 'border-neutral-800 bg-neutral-950/40 hover:border-neutral-700'

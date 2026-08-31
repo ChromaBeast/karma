@@ -1,6 +1,7 @@
 package portfolio
 
 import (
+	"context"
 	"errors"
 	"regexp"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/models"
+	"karma/apps/api/pkg/repository"
 )
 
 var (
@@ -19,15 +21,20 @@ var (
 
 type PortfolioService struct {
 	mu         sync.RWMutex
+	repo       *repository.PortfolioRepository
 	portfolios map[uuid.UUID]*models.Portfolio
 	projects   map[uuid.UUID][]*models.PortfolioProject
 }
 
-func NewPortfolioService() *PortfolioService {
-	return &PortfolioService{
+func NewPortfolioService(repo ...*repository.PortfolioRepository) *PortfolioService {
+	svc := &PortfolioService{
 		portfolios: make(map[uuid.UUID]*models.Portfolio),
 		projects:   make(map[uuid.UUID][]*models.PortfolioProject),
 	}
+	if len(repo) > 0 && repo[0] != nil {
+		svc.repo = repo[0]
+	}
+	return svc
 }
 
 func (s *PortfolioService) UpsertPortfolio(userID uuid.UUID, themeID, subdomain string, config map[string]interface{}) (*models.Portfolio, error) {
@@ -40,13 +47,17 @@ func (s *PortfolioService) UpsertPortfolio(userID uuid.UUID, themeID, subdomain 
 	defer s.mu.Unlock()
 
 	var existing *models.Portfolio
-	for _, p := range s.portfolios {
-		if p.UserID == userID {
-			existing = p
-			break
+	if s.repo != nil {
+		if dbP, err := s.repo.GetByUserID(context.Background(), userID); err == nil && dbP != nil {
+			existing = dbP
 		}
-		if p.Subdomain == subdomain && p.UserID != userID {
-			return nil, errors.New("subdomain already taken")
+	}
+	if existing == nil {
+		for _, p := range s.portfolios {
+			if p.UserID == userID {
+				existing = p
+				break
+			}
 		}
 	}
 
@@ -55,6 +66,10 @@ func (s *PortfolioService) UpsertPortfolio(userID uuid.UUID, themeID, subdomain 
 		existing.ThemeID = themeID
 		existing.Subdomain = subdomain
 		existing.Config = config
+		if s.repo != nil {
+			_ = s.repo.UpsertPortfolio(context.Background(), existing)
+		}
+		s.portfolios[existing.ID] = existing
 		return existing, nil
 	}
 
@@ -68,13 +83,24 @@ func (s *PortfolioService) UpsertPortfolio(userID uuid.UUID, themeID, subdomain 
 	}
 
 	s.portfolios[portfolio.ID] = portfolio
+	if s.repo != nil {
+		_ = s.repo.UpsertPortfolio(context.Background(), portfolio)
+	}
 	return portfolio, nil
 }
 
 func (s *PortfolioService) PublishPortfolio(userID uuid.UUID) (*models.Portfolio, error) {
+	if s.repo != nil {
+		if p, err := s.repo.Publish(context.Background(), userID); err == nil && p != nil {
+			s.mu.Lock()
+			s.portfolios[p.ID] = p
+			s.mu.Unlock()
+			return p, nil
+		}
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	for _, p := range s.portfolios {
 		if p.UserID == userID {
 			now := time.Now().UTC()
@@ -86,9 +112,13 @@ func (s *PortfolioService) PublishPortfolio(userID uuid.UUID) (*models.Portfolio
 }
 
 func (s *PortfolioService) GetPortfolio(userID uuid.UUID) (*models.Portfolio, error) {
+	if s.repo != nil {
+		if p, err := s.repo.GetByUserID(context.Background(), userID); err == nil && p != nil {
+			return p, nil
+		}
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
 	for _, p := range s.portfolios {
 		if p.UserID == userID {
 			return p, nil
@@ -98,9 +128,13 @@ func (s *PortfolioService) GetPortfolio(userID uuid.UUID) (*models.Portfolio, er
 }
 
 func (s *PortfolioService) GetBySubdomain(subdomain string) (*models.Portfolio, error) {
+	if s.repo != nil {
+		if p, err := s.repo.GetBySubdomain(context.Background(), subdomain); err == nil && p != nil {
+			return p, nil
+		}
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
 	subdomain = strings.ToLower(strings.TrimSpace(subdomain))
 	for _, p := range s.portfolios {
 		if strings.EqualFold(p.Subdomain, subdomain) {
@@ -111,9 +145,13 @@ func (s *PortfolioService) GetBySubdomain(subdomain string) (*models.Portfolio, 
 }
 
 func (s *PortfolioService) SetProjects(portfolioID uuid.UUID, nodeIDs []uuid.UUID) []*models.PortfolioProject {
+	if s.repo != nil {
+		if list, err := s.repo.SetProjects(context.Background(), portfolioID, nodeIDs); err == nil {
+			return list
+		}
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	var list []*models.PortfolioProject
 	for i, nid := range nodeIDs {
 		proj := &models.PortfolioProject{
@@ -124,7 +162,6 @@ func (s *PortfolioService) SetProjects(portfolioID uuid.UUID, nodeIDs []uuid.UUI
 		}
 		list = append(list, proj)
 	}
-
 	s.projects[portfolioID] = list
 	return list
 }

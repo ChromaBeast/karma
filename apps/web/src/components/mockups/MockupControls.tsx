@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Laptop, Smartphone, Globe, Share2, Image as ImageIcon } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Laptop, Smartphone, Globe, Share2, Upload, Link as LinkIcon } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import { MockupConfig } from '../../lib/types';
 
 const FRAMES: { id: MockupConfig['frameType']; label: string; icon: React.ElementType }[] = [
@@ -19,14 +20,29 @@ const GRADIENTS = [
   { label: 'Obsidian Minimal', value: 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #09090b 100%)' },
 ];
 
-const PRESET_IMAGES = [
-  { label: 'Architecture Dashboard', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Analytics Console', url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Code Pipeline', url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80' },
-];
-
 export const MockupControls: React.FC = () => {
   const { mockup, setMockup } = useApp();
+  const { addToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setMockup((prev) => ({ ...prev, sourceImageUrl: result }));
+        addToast({
+          title: 'Screenshot Loaded',
+          description: `Loaded "${file.name}" into mockup canvas.`,
+          type: 'success',
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5">
@@ -79,7 +95,7 @@ export const MockupControls: React.FC = () => {
         </div>
       </div>
 
-      {/* Background Gradients */}
+      {/* Backdrop Gradient */}
       <div>
         <label className="block text-xs font-semibold text-white mb-2 uppercase tracking-wider">
           Backdrop Gradient
@@ -102,26 +118,39 @@ export const MockupControls: React.FC = () => {
         </div>
       </div>
 
-      {/* Preset Image Selection */}
-      <div>
-        <label className="block text-xs font-semibold text-white mb-2 uppercase tracking-wider">
-          Screenshot Artifact
+      {/* Custom Image Upload & URL */}
+      <div className="space-y-2">
+        <label className="block text-xs font-semibold text-white uppercase tracking-wider">
+          Screenshot Image
         </label>
-        <div className="space-y-1.5">
-          {PRESET_IMAGES.map((img) => (
-            <button
-              key={img.label}
-              onClick={() => setMockup((prev) => ({ ...prev, sourceImageUrl: img.url }))}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs text-left transition-all ${
-                mockup.sourceImageUrl === img.url
-                  ? 'border-indigo-500 bg-indigo-950/40 text-white font-medium'
-                  : 'border-neutral-800 bg-neutral-950/30 text-neutral-400 hover:text-neutral-200'
-              }`}
-            >
-              <span className="truncate">{img.label}</span>
-              <ImageIcon className="w-3.5 h-3.5 text-neutral-500" />
-            </button>
-          ))}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-indigo-500/40 bg-indigo-950/20 hover:bg-indigo-950/30 text-indigo-300 text-xs font-semibold transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+          <span>Upload Image from Computer</span>
+        </button>
+
+        <div className="flex items-center gap-2 pt-1">
+          <div className="relative flex-1">
+            <LinkIcon className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={mockup.sourceImageUrl}
+              onChange={(e) => setMockup((prev) => ({ ...prev, sourceImageUrl: e.target.value }))}
+              placeholder="Or paste image URL (https://...)"
+              className="w-full pl-8 pr-3 py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white placeholder-neutral-500 focus:border-indigo-500 focus:outline-none font-mono"
+            />
+          </div>
         </div>
       </div>
     </div>

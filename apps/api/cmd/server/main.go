@@ -63,6 +63,9 @@ func BuildDependencies() ServerDependencies {
 	var userRepo *repository.UserRepository
 	var careerRepo *repository.CareerRepository
 	var vaultRepo *repository.VaultRepository
+	var portRepo *repository.PortfolioRepository
+	var resumeRepo *repository.ResumeRepository
+	var mockupRepo *repository.MockupRepository
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL != "" {
@@ -78,6 +81,9 @@ func BuildDependencies() ServerDependencies {
 			userRepo = repository.NewUserRepository(database.Pool)
 			careerRepo = repository.NewCareerRepository(database.Pool)
 			vaultRepo = repository.NewVaultRepository(database.Pool)
+			portRepo = repository.NewPortfolioRepository(database.Pool)
+			resumeRepo = repository.NewResumeRepository(database.Pool)
+			mockupRepo = repository.NewMockupRepository(database.Pool)
 		}
 	} else {
 		log.Println("ℹ️ DATABASE_URL not set — running with in-memory persistence")
@@ -98,7 +104,7 @@ func BuildDependencies() ServerDependencies {
 	careerSvc := career.NewCareerService(careerRepo)
 	careerH := career.NewCareerHandler(careerSvc)
 
-	resumeSvc := resume.NewResumeService()
+	resumeSvc := resume.NewResumeService(resumeRepo)
 	resumeH := resume.NewResumeHandler(resumeSvc, careerSvc)
 
 	creditLedger := llm.NewCreditLedgerService()
@@ -106,10 +112,10 @@ func BuildDependencies() ServerDependencies {
 	llmRouter := llm.NewLLMRouter(vaultSvc, creditLedger, promptCache)
 	llmH := llm.NewLLMHandler(llmRouter, creditLedger)
 
-	portSvc := portfolio.NewPortfolioService()
+	portSvc := portfolio.NewPortfolioService(portRepo)
 	portH := portfolio.NewPortfolioHandler(portSvc)
 
-	mockupSvc := mockup.NewMockupService()
+	mockupSvc := mockup.NewMockupService(mockupRepo)
 	mockupH := mockup.NewMockupHandler(mockupSvc)
 
 	liSvc := tools.NewLinkedInService()

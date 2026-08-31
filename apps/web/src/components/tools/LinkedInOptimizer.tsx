@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Share2, Copy, Check, Sparkles, RefreshCw } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../lib/api';
 
@@ -11,35 +12,14 @@ interface Variant {
   post: string;
 }
 
-const DEFAULT_VARIANTS: Variant[] = [
-  {
-    type: 'High-Impact Metrics',
-    headline: 'Senior Backend Engineer | Scaled Go microservices to 100k rps (-90% latency) | PostgreSQL & Distributed Systems',
-    post: `🚀 Most backend bottlenecks aren't CPU-bound—they're network roundtrips and unindexed queries.
-
-Recently, our team re-architected our caching layer in Go:
-• Replaced unindexed database calls with in-memory TTL caching
-• Scaled to 100k requests/sec at under 2ms p99 response time
-• Cut cloud database egress costs significantly.
-
-Always measure before optimizing! What is your favorite profiling tool in Go?`,
-  },
-  {
-    type: 'System Design / Technical',
-    headline: 'Distributed Systems & Go | Open Source Contributor | Low-Latency Infrastructure',
-    post: `💡 3 lessons from optimizing high-throughput Go services:
-
-1. Always use sync.RWMutex for read-heavy in-memory caches to avoid lock contention.
-2. Structure database queries with compound indexes before adding external caches.
-3. Keep HTTP middleware lightweight with Gzip compression.`,
-  },
-];
-
 export const LinkedInOptimizer: React.FC = () => {
+  const { jobDescription } = useApp();
   const { addToast } = useToast();
-  const [roleTitle, setRoleTitle] = useState('Senior Backend Engineer');
-  const [skills, setSkills] = useState('Go, PostgreSQL, Distributed Systems, Redis');
-  const [variants, setVariants] = useState<Variant[]>(DEFAULT_VARIANTS);
+  const [roleTitle, setRoleTitle] = useState(jobDescription.roleTitle || 'Senior Software Engineer');
+  const [skills, setSkills] = useState(
+    jobDescription.parsedRequirements.requiredSkills.join(', ') || 'Go, PostgreSQL, Cloud Architecture'
+  );
+  const [variants, setVariants] = useState<Variant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
@@ -48,26 +28,30 @@ export const LinkedInOptimizer: React.FC = () => {
     try {
       const [hlRes, postRes] = await Promise.all([
         api.generateHeadline(roleTitle, skills).catch(() => null),
-        api.generatePost('Distributed Caching Architecture', '100k req/sec at <2ms latency').catch(() => null),
+        api.generatePost(roleTitle, `Key engineering focus: ${skills}`).catch(() => null),
       ]);
 
-      if (hlRes?.headline || postRes?.post_text) {
-        setVariants([
-          {
-            type: 'AI Generated · Tailored',
-            headline: hlRes?.headline || `${roleTitle} | ${skills}`,
-            post: postRes?.post_text || DEFAULT_VARIANTS[0].post,
-          },
-          ...DEFAULT_VARIANTS,
-        ]);
-        addToast({
-          title: 'LinkedIn Content Generated',
-          description: 'Created headline and post drafts from your background.',
-          type: 'success',
-        });
-      }
+      const headline = hlRes?.headline || `${roleTitle} | ${skills}`;
+      const postText = postRes?.post_text || `🚀 Building high-scale solutions as a ${roleTitle}.\n\nFocus areas:\n• Scaling ${skills}\n• System reliability and low-latency delivery\n• Measurable performance optimization\n\nWhat are your go-to patterns when tackling complex backend scaling?`;
+
+      setVariants([
+        {
+          type: 'Technical & Metrics Focus',
+          headline,
+          post: postText,
+        },
+      ]);
+      addToast({
+        title: 'LinkedIn Content Generated',
+        description: `Created headline and post drafts tailored to ${roleTitle}.`,
+        type: 'success',
+      });
     } catch {
-      // Keep defaults
+      addToast({
+        title: 'Generation Failed',
+        description: 'Check your API key vault and try again.',
+        type: 'error',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -130,30 +114,37 @@ export const LinkedInOptimizer: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-3 pt-2">
-        {variants.map((v, i) => (
-          <div key={i} className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800/40">
-                {v.type}
-              </span>
-              <button
-                onClick={() => handleCopy(v.post, i)}
-                className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white"
-              >
-                {copiedIndex === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedIndex === i ? 'Copied' : 'Copy Post'}</span>
-              </button>
+      {variants.length === 0 ? (
+        <div className="p-8 text-center rounded-xl border border-dashed border-neutral-800 bg-neutral-950/40 text-neutral-500 text-xs space-y-1">
+          <p className="font-semibold text-neutral-400">No content generated yet</p>
+          <p>Click &quot;Generate Live&quot; to draft posts and headlines based on your role and skills.</p>
+        </div>
+      ) : (
+        <div className="space-y-3 pt-2">
+          {variants.map((v, i) => (
+            <div key={i} className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800/40">
+                  {v.type}
+                </span>
+                <button
+                  onClick={() => handleCopy(v.post, i)}
+                  className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white"
+                >
+                  {copiedIndex === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedIndex === i ? 'Copied' : 'Copy Post'}</span>
+                </button>
+              </div>
+              <div className="text-xs font-semibold text-neutral-200">
+                Headline: <span className="text-neutral-400 font-normal">{v.headline}</span>
+              </div>
+              <pre className="text-xs text-neutral-300 whitespace-pre-wrap font-sans bg-neutral-900/50 p-3 rounded-lg border border-neutral-800/60 leading-relaxed">
+                {v.post}
+              </pre>
             </div>
-            <div className="text-xs font-semibold text-neutral-200">
-              Headline: <span className="text-neutral-400 font-normal">{v.headline}</span>
-            </div>
-            <pre className="text-xs text-neutral-300 whitespace-pre-wrap font-sans bg-neutral-900/50 p-3 rounded-lg border border-neutral-800/60 leading-relaxed">
-              {v.post}
-            </pre>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
