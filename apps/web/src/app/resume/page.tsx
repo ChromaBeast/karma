@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileEdit } from 'lucide-react';
+import { FileEdit, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ATSScoreCard } from '../../components/resume/ATSScoreCard';
 import { KnapsackBar } from '../../components/resume/KnapsackBar';
@@ -13,6 +13,7 @@ import { DecryptedText } from '@karma/ui';
 export default function ResumePage() {
   const { jobDescription } = useApp();
   const [showJDModal, setShowJDModal] = useState(false);
+  const hasJob = !!jobDescription.company || !!jobDescription.roleTitle;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -37,27 +38,36 @@ export default function ResumePage() {
           className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all"
         >
           <FileEdit className="w-4 h-4" />
-          <span>Target Job: {jobDescription.company}</span>
+          <span>{hasJob ? `Target: ${jobDescription.company}` : 'Set Target Job Description'}</span>
         </button>
       </div>
 
       {/* Target JD Summary Bar */}
       <div className="flex items-center justify-between p-3.5 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-white">{jobDescription.roleTitle}</span>
-          <span className="text-neutral-500">•</span>
-          <span className="text-indigo-400 font-medium">{jobDescription.company}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {jobDescription.parsedRequirements.requiredSkills.slice(0, 3).map((sk) => (
-            <span
-              key={sk}
-              className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-300 font-mono hidden md:inline-block"
-            >
-              {sk}
-            </span>
-          ))}
-        </div>
+        {hasJob ? (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-white">{jobDescription.roleTitle}</span>
+              <span className="text-neutral-500">•</span>
+              <span className="text-indigo-400 font-medium">{jobDescription.company}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {jobDescription.parsedRequirements.requiredSkills.slice(0, 4).map((sk) => (
+                <span
+                  key={sk}
+                  className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-300 font-mono hidden md:inline-block"
+                >
+                  {sk}
+                </span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-2 text-neutral-400">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span>No target job specified. Click &quot;Set Target Job Description&quot; to begin optimization.</span>
+          </div>
+        )}
       </div>
 
       {/* Main 2-Column Split: Controls + Live A4 Preview */}

@@ -13,10 +13,11 @@ import {
   Wand2,
 } from 'lucide-react';
 import { cn } from '@karma/ui';
+import { useApp } from '../../context/AppContext';
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Overview', icon: LayoutDashboard },
-  { href: '/career', label: 'Career Graph', icon: GitGraph, badge: 'Active' },
+  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/career', label: 'Career Graph', icon: GitGraph },
   { href: '/resume', label: 'ATS Resumes', icon: FileText },
   { href: '/mockups', label: 'Proof Mockups', icon: MonitorPlay },
   { href: '/portfolio', label: 'Portfolio CMS', icon: Globe2 },
@@ -26,12 +27,13 @@ const NAV_ITEMS = [
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const { nodes } = useApp();
 
   return (
     <aside className="w-64 border-r border-neutral-800 bg-neutral-950/40 p-4 flex flex-col justify-between shrink-0 hidden md:flex min-h-[calc(100vh-4rem)]">
       <div className="space-y-1">
         <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-          Core Engine
+          Workspaces
         </div>
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
@@ -58,11 +60,6 @@ export const Sidebar: React.FC = () => {
                   />
                   <span>{item.label}</span>
                 </div>
-                {item.badge && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-950 text-indigo-400 font-semibold border border-indigo-800/50">
-                    {item.badge}
-                  </span>
-                )}
               </Link>
             );
           })}
@@ -72,14 +69,19 @@ export const Sidebar: React.FC = () => {
       {/* Footer Storage / Plan Indicator */}
       <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800 space-y-2">
         <div className="flex items-center justify-between text-xs text-neutral-400">
-          <span>Graph Capacity</span>
-          <span className="font-mono text-neutral-200 font-medium">3 / 500 nodes</span>
+          <span>Graph Index</span>
+          <span className="font-mono text-neutral-200 font-medium">
+            {nodes.length} / 500 nodes
+          </span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-neutral-800 overflow-hidden">
-          <div className="h-full bg-indigo-500 w-[6%]" />
+          <div
+            className="h-full bg-indigo-500 transition-all duration-300"
+            style={{ width: `${Math.max(Math.min((nodes.length / 500) * 100, 100), 2)}%` }}
+          />
         </div>
         <p className="text-[10px] text-neutral-500">
-          1-Time Access License Active
+          PostgreSQL pgvector index active
         </p>
       </div>
     </aside>

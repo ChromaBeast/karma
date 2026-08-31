@@ -52,38 +52,48 @@ export default function CareerGraphPage() {
         </button>
       </div>
 
-      {/* Ingestion Status Pipeline Component */}
       <EventPoller />
 
-      {/* Interactive Filters */}
-      <CareerNodeFilter
-        selectedType={selectedType}
-        onTypeChange={setSelectedType}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+      {nodes.length > 0 && (
+        <CareerNodeFilter
+          selectedType={selectedType}
+          onTypeChange={setSelectedType}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      )}
 
       {/* Nodes Timeline Grid */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between text-xs text-neutral-500 px-1">
-          <span>{filteredNodes.length} Structured Nodes In Index</span>
-          <span className="flex items-center gap-1">
-            <ArrowDownUp className="w-3 h-3" /> Sorted by Recency & Metric Impact
-          </span>
-        </div>
-
         {filteredNodes.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl border border-neutral-800 bg-neutral-900/30">
-            <GitBranch className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
-            <p className="text-sm font-medium text-neutral-400">No nodes match your filter criteria.</p>
-            <p className="text-xs text-neutral-500 mt-1">Capture new achievements using the Quick Capture button.</p>
+          <div className="p-12 text-center rounded-2xl border border-neutral-800 bg-neutral-900/30 space-y-3">
+            <GitBranch className="w-10 h-10 text-neutral-600 mx-auto" />
+            <p className="text-sm font-semibold text-white">No career achievements logged yet</p>
+            <p className="text-xs text-neutral-400 max-w-md mx-auto">
+              Record what you shipped, bugs you fixed, or architectures you built. Karma structures your wins automatically.
+            </p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Log Your First Win</span>
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredNodes.map((node) => (
-              <CareerNodeCard key={node.id} node={node} />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-between text-xs text-neutral-500 px-1">
+              <span>{filteredNodes.length} Structured Nodes In Index</span>
+              <span className="flex items-center gap-1">
+                <ArrowDownUp className="w-3 h-3" /> Sorted by Recency
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredNodes.map((node) => (
+                <CareerNodeCard key={node.id} node={node} />
+              ))}
+            </div>
+          </>
         )}
       </div>
 

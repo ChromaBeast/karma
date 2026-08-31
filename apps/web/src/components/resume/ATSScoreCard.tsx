@@ -6,8 +6,9 @@ import { useApp } from '../../context/AppContext';
 import { CountUp } from '@karma/ui';
 
 export const ATSScoreCard: React.FC = () => {
-  const { resume } = useApp();
+  const { resume, jobDescription } = useApp();
   const { scoreBreakdown, atsScore } = resume;
+  const hasJob = !!jobDescription.company || !!jobDescription.roleTitle;
 
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 space-y-4">
@@ -19,17 +20,23 @@ export const ATSScoreCard: React.FC = () => {
               ATS Match &amp; Relevance Score
             </h3>
             <p className="text-[10px] text-neutral-400">
-              Calculated match against target job requirements
+              {hasJob
+                ? `Calculated against ${jobDescription.company} (${jobDescription.roleTitle})`
+                : 'Set a target job to score resume compatibility'}
             </p>
           </div>
         </div>
 
         <div className="text-right">
           <div className="text-2xl font-bold font-mono text-emerald-400 leading-none">
-            <CountUp to={atsScore} decimals={1} suffix="%" duration={1.5} />
+            {atsScore > 0 ? (
+              <CountUp to={atsScore} decimals={1} suffix="%" duration={1.5} />
+            ) : (
+              '--%'
+            )}
           </div>
-          <span className="text-[10px] font-medium text-emerald-500 uppercase">
-            Strong Role Match
+          <span className="text-[10px] font-medium text-neutral-400 uppercase">
+            {atsScore > 80 ? 'Strong Match' : atsScore > 0 ? 'Partial Match' : 'Target Pending'}
           </span>
         </div>
       </div>
@@ -42,7 +49,7 @@ export const ATSScoreCard: React.FC = () => {
             <Target className="w-3 h-3 text-indigo-400" />
           </div>
           <p className="text-sm font-bold font-mono text-white">
-            {scoreBreakdown.keywordMatch}%
+            {scoreBreakdown.keywordMatch > 0 ? `${scoreBreakdown.keywordMatch}%` : '--'}
           </p>
         </div>
 
@@ -52,7 +59,7 @@ export const ATSScoreCard: React.FC = () => {
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
           </div>
           <p className="text-sm font-bold font-mono text-white">
-            {scoreBreakdown.formatCompliance}%
+            {scoreBreakdown.formatCompliance > 0 ? `${scoreBreakdown.formatCompliance}%` : '100%'}
           </p>
         </div>
 
@@ -62,7 +69,7 @@ export const ATSScoreCard: React.FC = () => {
             <Zap className="w-3 h-3 text-amber-400" />
           </div>
           <p className="text-sm font-bold font-mono text-white">
-            {scoreBreakdown.actionVerbStrength}%
+            {scoreBreakdown.actionVerbStrength > 0 ? `${scoreBreakdown.actionVerbStrength}%` : '--'}
           </p>
         </div>
 
@@ -72,7 +79,7 @@ export const ATSScoreCard: React.FC = () => {
             <ShieldCheck className="w-3 h-3 text-purple-400" />
           </div>
           <p className="text-sm font-bold font-mono text-white">
-            {scoreBreakdown.brevityDensity}%
+            {scoreBreakdown.brevityDensity > 0 ? `${scoreBreakdown.brevityDensity}%` : '--'}
           </p>
         </div>
       </div>

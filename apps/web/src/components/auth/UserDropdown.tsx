@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { LogOut, ShieldCheck, Sparkles, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { LogOut, LayoutDashboard, Sparkles, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const UserDropdown: React.FC = () => {
@@ -61,14 +62,15 @@ export const UserDropdown: React.FC = () => {
             </div>
           </div>
 
-          {/* Session Token Status */}
-          <div className="px-3 py-1.5 flex items-center justify-between text-[11px] text-neutral-400">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Active Session</span>
-            </span>
-            <span className="text-emerald-400 font-mono text-[10px]">Auto-Rotated</span>
-          </div>
+          {/* Quick Dashboard Link */}
+          <Link
+            href="/dashboard"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4 text-indigo-400" />
+            <span>Dashboard Overview</span>
+          </Link>
 
           {/* Logout Action */}
           <button
@@ -76,7 +78,7 @@ export const UserDropdown: React.FC = () => {
               setIsOpen(false);
               logout();
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-950/40 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-950/40 transition-colors border-t border-neutral-800/60 pt-2"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>

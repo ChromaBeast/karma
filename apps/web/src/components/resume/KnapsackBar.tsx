@@ -7,10 +7,9 @@ import { useApp } from '../../context/AppContext';
 export const KnapsackBar: React.FC = () => {
   const { resume } = useApp();
 
-  const percentage = Math.min(
-    Math.round((resume.characterCount / resume.maxCharacterBudget) * 100),
-    120
-  );
+  const percentage = resume.maxCharacterBudget > 0
+    ? Math.min(Math.round((resume.characterCount / resume.maxCharacterBudget) * 100), 120)
+    : 0;
 
   const isOverBudget = resume.characterCount > resume.maxCharacterBudget;
   const isOptimal = percentage >= 75 && percentage <= 100;
@@ -32,7 +31,7 @@ export const KnapsackBar: React.FC = () => {
               ? 'bg-rose-950 text-rose-300 border border-rose-800/60'
               : isOptimal
               ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60'
-              : 'bg-amber-950 text-amber-300 border border-amber-800/60'
+              : 'bg-neutral-800 text-neutral-300 border border-neutral-700'
           }`}>
             {percentage}% Fitted
           </span>
@@ -47,7 +46,7 @@ export const KnapsackBar: React.FC = () => {
               ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]'
               : isOptimal
               ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
-              : 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'
+              : 'bg-indigo-500'
           }`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
@@ -59,9 +58,13 @@ export const KnapsackBar: React.FC = () => {
           <span className="text-rose-400 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" /> Page 2 overflow risk
           </span>
-        ) : (
+        ) : isOptimal ? (
           <span className="text-emerald-400 flex items-center gap-1">
             <CheckCircle className="w-3 h-3" /> Clean 1-page fit
+          </span>
+        ) : (
+          <span className="text-neutral-400">
+            {resume.characterCount === 0 ? 'No bullets selected' : 'Ready to add more bullets'}
           </span>
         )}
       </div>
