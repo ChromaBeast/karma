@@ -34,7 +34,9 @@ export default function HomePage() {
       <TestimonialsSection />
 
       {/* 7. Transparent One-Time Pricing Model */}
-      <PricingSection />
+      <section id="pricing">
+        <PricingSection />
+      </section>
 
       {/* 8. Frequently Asked Questions Accordion */}
       <FaqSection />

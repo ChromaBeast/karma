@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Plus } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import { ShinyText } from '@karma/ui';
-import { EventCaptureModal } from '../career/EventCaptureModal';
 import { UserDropdown } from '../auth/UserDropdown';
 import { AuthModal } from '../auth/AuthModal';
+import { useAuth } from '../../context/AuthContext';
 
 export const Header: React.FC = () => {
-  const [showCapture, setShowCapture] = useState(false);
+  const { user } = useAuth();
 
   return (
     <>
@@ -34,35 +34,32 @@ export const Header: React.FC = () => {
           </Link>
         </div>
 
-        {/* Right Actions */}
+        {/* Right Actions: See Pricing & Sign In / Dashboard */}
         <div className="flex items-center gap-3">
-          {/* BYOK Security Status Pill */}
+          {/* See Pricing Link */}
           <Link
-            href="/vault"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-900/60 bg-emerald-950/30 text-emerald-400 text-xs font-medium hover:bg-emerald-950/50 transition-colors"
+            href="/#pricing"
+            className="text-xs font-semibold text-neutral-300 hover:text-white px-3.5 py-2 rounded-xl hover:bg-neutral-900 border border-transparent hover:border-neutral-800 transition-all"
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>BYOK Vault</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            See Pricing
           </Link>
 
-          {/* Quick Capture Event Button */}
-          <button
-            onClick={() => setShowCapture(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-md shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Capture Event</span>
-          </button>
+          {/* Logged-In Direct Dashboard Shortcut */}
+          {user && (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-colors"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Link>
+          )}
 
-          {/* User Profile / Auth State */}
-          <div className="pl-2 border-l border-neutral-800">
-            <UserDropdown />
-          </div>
+          {/* User Profile Dropdown / Sign In Trigger */}
+          <UserDropdown />
         </div>
       </header>
 
-      {showCapture && <EventCaptureModal onClose={() => setShowCapture(false)} />}
       <AuthModal />
     </>
   );
