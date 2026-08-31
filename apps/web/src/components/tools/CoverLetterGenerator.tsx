@@ -1,30 +1,43 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileText, Copy, Check } from 'lucide-react';
+import { FileText, Copy, Check, Sparkles, RefreshCw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../lib/api';
 
 export const CoverLetterGenerator: React.FC = () => {
   const { jobDescription } = useApp();
   const { addToast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [company, setCompany] = useState(jobDescription.company || 'Stripe');
+  const [roleTitle, setRoleTitle] = useState(jobDescription.roleTitle || 'Senior Backend Engineer');
+  const [letterText, setLetterText] = useState(
+    `Dear Hiring Team at ${company},\n\nI am writing to express my strong interest in the ${roleTitle} position. With experience architecting scalable backend services and high-throughput systems in Go and PostgreSQL, I focus on building reliable, cost-efficient software.\n\nIn my recent work, I led the implementation of our caching and query optimization layers, reducing p99 latency by over 40% and cutting cloud infrastructure costs. I enjoy solving challenging scaling problems and shipping robust APIs.\n\nGiven ${company}'s focus on engineering excellence, I would love the opportunity to contribute to your team.\n\nSincerely,\nAlex Chen`
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const coverLetterText = `Dear Hiring Team at ${jobDescription.company},
-
-I am writing to express my strong interest in the ${jobDescription.roleTitle} position. With over 8 years architecting distributed backend infrastructure and high-throughput microservices in Go, I have consistently focused on building scalable, cost-efficient platforms.
-
-At Stripe / Cloud Scale, I led the redesign of our global egress proxy mesh across 12 availability zones, reducing tail p99 latency by 42% and generating $1.2M in annual cloud infrastructure cost savings. Furthermore, I engineered an open-source vector retrieval engine utilizing PostgreSQL pgvector with SIMD quantization, achieving sub-5ms similarity search over 10 million embeddings.
-
-Given ${jobDescription.company}'s emphasis on high availability and resilient infrastructure, I am eager to bring my deep background in Go, Kubernetes, and distributed database architecture to your engineering team.
-
-Thank you for your time and consideration.
-
-Sincerely,
-Alex Mercer`;
+  const handleSynthesize = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.generateCoverLetter(company, roleTitle);
+      if (res?.body || res?.letter_text) {
+        setLetterText(res.body || res.letter_text);
+        addToast({
+          title: 'Cover Letter Synthesized',
+          description: `Customized for ${company} (${roleTitle}).`,
+          type: 'success',
+        });
+      }
+    } catch {
+      // Keep default
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(coverLetterText);
+    navigator.clipboard.writeText(letterText);
     setCopied(true);
     addToast({
       title: 'Cover Letter Copied',
@@ -36,31 +49,65 @@ Alex Mercer`;
 
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800 pb-4">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-amber-400" />
           <div>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-              Tailored Cover Letter Synthesis
+              Tailored Cover Letter Generator
             </h3>
             <p className="text-[11px] text-neutral-400">
-              Matched against {jobDescription.company} ({jobDescription.roleTitle})
+              Generates targeted cover letters from your real career achievements
             </p>
           </div>
         </div>
 
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium border border-neutral-700 transition-colors"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          <span>{copied ? 'Copied' : 'Copy Text'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSynthesize}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium"
+          >
+            {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            <span>{isLoading ? 'Synthesizing...' : 'Synthesize'}</span>
+          </button>
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-medium border border-neutral-700 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
+        </div>
       </div>
 
-      <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-950/80 text-xs text-neutral-300 font-sans leading-relaxed whitespace-pre-line">
-        {coverLetterText}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-medium text-neutral-400 mb-1">Company</label>
+          <input
+            type="text"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-medium text-neutral-400 mb-1">Target Role</label>
+          <input
+            type="text"
+            value={roleTitle}
+            onChange={(e) => setRoleTitle(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-950 text-xs text-white"
+          />
+        </div>
       </div>
+
+      <textarea
+        rows={8}
+        value={letterText}
+        onChange={(e) => setLetterText(e.target.value)}
+        className="w-full p-4 rounded-xl border border-neutral-800 bg-neutral-950/80 text-xs text-neutral-200 font-sans leading-relaxed focus:outline-none focus:border-indigo-500"
+      />
     </div>
   );
 };

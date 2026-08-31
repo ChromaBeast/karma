@@ -14,6 +14,7 @@ interface AppContextValue {
   jobDescription: JobDescription;
   setJobDescription: React.Dispatch<React.SetStateAction<JobDescription>>;
   resume: GeneratedResume;
+  setResume: React.Dispatch<React.SetStateAction<GeneratedResume>>;
   toggleResumeBullet: (nodeId: string) => void;
   mockup: MockupConfig;
   setMockup: React.Dispatch<React.SetStateAction<MockupConfig>>;
@@ -122,7 +123,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider
       value={{
         events, nodes, addEvent, deleteNode, addNode,
-        jobDescription, setJobDescription, resume, toggleResumeBullet,
+        jobDescription, setJobDescription, resume, setResume, toggleResumeBullet,
         mockup, setMockup, portfolio, setPortfolio,
         vaultKeys, toggleVaultKey, saveVaultKey, executions, refreshData,
       }}

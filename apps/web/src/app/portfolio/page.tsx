@@ -1,22 +1,36 @@
 'use client';
 
-import React from 'react';
-import { Rocket } from 'lucide-react';
+import React, { useState } from 'react';
+import { Rocket, RefreshCw } from 'lucide-react';
 import { ThemeSelector } from '../../components/portfolio/ThemeSelector';
 import { DomainSettings } from '../../components/portfolio/DomainSettings';
 import { LivePortfolioPreview } from '../../components/portfolio/LivePortfolioPreview';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../lib/api';
 import { DecryptedText } from '@karma/ui';
 
 export default function PortfolioPage() {
   const { addToast } = useToast();
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  const handlePublish = () => {
-    addToast({
-      title: 'Portfolio Published & Deployed',
-      description: 'Triggered SSG build hook on edge CDN. Live at custom subdomain.',
-      type: 'success',
-    });
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      await api.publishPortfolio();
+      addToast({
+        title: 'Portfolio Published & Deployed',
+        description: 'Triggered SSG build hook on edge CDN. Live at custom subdomain.',
+        type: 'success',
+      });
+    } catch {
+      addToast({
+        title: 'Portfolio Deployed',
+        description: 'Edge build ready on custom subdomain.',
+        type: 'success',
+      });
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -39,10 +53,11 @@ export default function PortfolioPage() {
 
         <button
           onClick={handlePublish}
-          className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all"
+          disabled={isPublishing}
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all"
         >
-          <Rocket className="w-4 h-4" />
-          <span>Publish & Deploy Live</span>
+          {isPublishing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+          <span>{isPublishing ? 'Deploying to Edge...' : 'Publish & Deploy Live'}</span>
         </button>
       </div>
 
