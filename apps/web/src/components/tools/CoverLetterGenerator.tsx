@@ -3,17 +3,21 @@
 import React, { useState } from 'react';
 import { FileText, Copy, Check, Sparkles, RefreshCw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../lib/api';
 
 export const CoverLetterGenerator: React.FC = () => {
   const { jobDescription } = useApp();
+  const { user } = useAuth();
   const { addToast } = useToast();
   const [copied, setCopied] = useState(false);
-  const [company, setCompany] = useState(jobDescription.company || 'Stripe');
-  const [roleTitle, setRoleTitle] = useState(jobDescription.roleTitle || 'Senior Backend Engineer');
+  const [company, setCompany] = useState(jobDescription.company || 'Target Company');
+  const [roleTitle, setRoleTitle] = useState(jobDescription.roleTitle || 'Senior Software Engineer');
+  const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Your Name');
+
   const [letterText, setLetterText] = useState(
-    `Dear Hiring Team at ${company},\n\nI am writing to express my strong interest in the ${roleTitle} position. With experience architecting scalable backend services and high-throughput systems in Go and PostgreSQL, I focus on building reliable, cost-efficient software.\n\nIn my recent work, I led the implementation of our caching and query optimization layers, reducing p99 latency by over 40% and cutting cloud infrastructure costs. I enjoy solving challenging scaling problems and shipping robust APIs.\n\nGiven ${company}'s focus on engineering excellence, I would love the opportunity to contribute to your team.\n\nSincerely,\nAlex Chen`
+    `Dear Hiring Team at ${company},\n\nI am writing to express my strong interest in the ${roleTitle} position. With experience architecting scalable backend services and high-throughput systems, I focus on building reliable, cost-efficient software.\n\nIn my recent work, I led the implementation of our core service architecture and query optimization layers, reducing p99 latency and delivering critical business features on time. I enjoy solving challenging engineering problems and collaborating closely with product teams.\n\nGiven ${company}'s focus on engineering excellence, I would love the opportunity to contribute to your team.\n\nSincerely,\n${displayName}`
   );
   const [isLoading, setIsLoading] = useState(false);
 
