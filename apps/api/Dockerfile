@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /app
 RUN apk add --no-cache git ca-certificates
@@ -11,7 +11,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server ./cmd/server
 
 # Production stage
-FROM alpine:3.19
+FROM alpine:latest
 
 WORKDIR /app
 RUN apk --no-cache add ca-certificates tzdata
