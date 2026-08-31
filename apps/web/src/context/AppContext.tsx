@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { CareerEvent, CareerNode, JobDescription, GeneratedResume, MockupConfig, PortfolioConfig, VaultKey, LLMExecution } from '../lib/types';
 import { api } from '../lib/api';
-import { defaultJobDescription, defaultResume, defaultMockup, defaultPortfolio } from './defaultState';
+import { defaultNodes, defaultVaultKeys, defaultJobDescription, defaultResume, defaultMockup, defaultPortfolio } from './defaultState';
 
 interface AppContextValue {
   events: CareerEvent[];
@@ -31,8 +31,8 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [events, setEvents] = useState<CareerEvent[]>([]);
-  const [nodes, setNodes] = useState<CareerNode[]>([]);
-  const [vaultKeys, setVaultKeys] = useState<VaultKey[]>([]);
+  const [nodes, setNodes] = useState<CareerNode[]>(defaultNodes);
+  const [vaultKeys, setVaultKeys] = useState<VaultKey[]>(defaultVaultKeys);
   const [executions] = useState<LLMExecution[]>([]);
 
   const [jobDescription, setJobDescription] = useState<JobDescription>(defaultJobDescription);
@@ -46,8 +46,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         api.getCareerNodes().catch(() => []),
         api.getVaultKeys().catch(() => []),
       ]);
-      if (fetchedNodes && Array.isArray(fetchedNodes)) setNodes(fetchedNodes);
-      if (fetchedKeys && Array.isArray(fetchedKeys)) setVaultKeys(fetchedKeys);
+      if (fetchedNodes && Array.isArray(fetchedNodes) && fetchedNodes.length > 0) {
+        setNodes(fetchedNodes);
+      }
+      if (fetchedKeys && Array.isArray(fetchedKeys) && fetchedKeys.length > 0) {
+        setVaultKeys(fetchedKeys);
+      }
     } catch {
       // Graceful fallback
     }
