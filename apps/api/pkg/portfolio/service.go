@@ -97,6 +97,19 @@ func (s *PortfolioService) GetPortfolio(userID uuid.UUID) (*models.Portfolio, er
 	return nil, ErrPortfolioNotFound
 }
 
+func (s *PortfolioService) GetBySubdomain(subdomain string) (*models.Portfolio, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	subdomain = strings.ToLower(strings.TrimSpace(subdomain))
+	for _, p := range s.portfolios {
+		if strings.EqualFold(p.Subdomain, subdomain) {
+			return p, nil
+		}
+	}
+	return nil, ErrPortfolioNotFound
+}
+
 func (s *PortfolioService) SetProjects(portfolioID uuid.UUID, nodeIDs []uuid.UUID) []*models.PortfolioProject {
 	s.mu.Lock()
 	defer s.mu.Unlock()

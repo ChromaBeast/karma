@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"karma/apps/api/pkg/auth"
 )
@@ -24,6 +25,18 @@ func (h *PortfolioHandler) GetMine(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p, err := h.service.GetPortfolio(userID)
+	if err != nil {
+		http.Error(w, `{"error":"portfolio not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(p)
+}
+
+func (h *PortfolioHandler) GetPublic(w http.ResponseWriter, r *http.Request) {
+	subdomain := chi.URLParam(r, "subdomain")
+	p, err := h.service.GetBySubdomain(subdomain)
 	if err != nil {
 		http.Error(w, `{"error":"portfolio not found"}`, http.StatusNotFound)
 		return

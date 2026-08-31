@@ -62,7 +62,7 @@ func SetupRouter(deps ServerDependencies) *chi.Mux {
 	})
 
 	r.Route("/v1", func(v1 chi.Router) {
-		// Public auth endpoints
+		// Public auth & public portfolio endpoints
 		v1.Route("/auth", func(a chi.Router) {
 			a.Post("/login", deps.AuthHandler.EmailLogin)
 			a.Post("/logout", deps.AuthHandler.Logout)
@@ -75,6 +75,8 @@ func SetupRouter(deps ServerDependencies) *chi.Mux {
 				authGroup.Get("/me", deps.AuthHandler.Me)
 			})
 		})
+
+		v1.Get("/portfolios/public/{subdomain}", deps.PortHandler.GetPublic)
 
 		// Protected endpoints
 		v1.Group(func(p chi.Router) {
