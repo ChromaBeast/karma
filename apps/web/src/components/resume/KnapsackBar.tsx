@@ -20,7 +20,7 @@ export const KnapsackBar: React.FC = () => {
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 font-semibold text-white">
           <Layers className="w-4 h-4 text-indigo-400" />
-          <span>1-Page Knapsack Character Budget</span>
+          <span>1-Page Resume Character Budget</span>
         </div>
         <div className="flex items-center gap-2 font-mono">
           <span className={`font-semibold ${isOverBudget ? 'text-rose-400' : 'text-neutral-200'}`}>
@@ -54,14 +54,14 @@ export const KnapsackBar: React.FC = () => {
       </div>
 
       <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-0.5">
-        <span>Greedy dynamic-programming fit ensures strict 1-page compliance.</span>
+        <span>Fitted to fill 1 page cleanly without spilling onto page 2.</span>
         {isOverBudget ? (
           <span className="text-rose-400 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" /> Page 2 overflow risk
           </span>
         ) : (
           <span className="text-emerald-400 flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" /> Perfect single-page density
+            <CheckCircle className="w-3 h-3" /> Clean 1-page fit
           </span>
         )}
       </div>

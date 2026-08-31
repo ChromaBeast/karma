@@ -16,10 +16,10 @@ export const ATSScoreCard: React.FC = () => {
           <ShieldCheck className="w-5 h-5 text-emerald-400" />
           <div>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-              ATS Match & Scoring
+              ATS Match &amp; Relevance Score
             </h3>
             <p className="text-[10px] text-neutral-400">
-              Deterministic parsing check against JD constraints
+              Calculated match against target job requirements
             </p>
           </div>
         </div>
@@ -29,7 +29,7 @@ export const ATSScoreCard: React.FC = () => {
             <CountUp to={atsScore} decimals={1} suffix="%" duration={1.5} />
           </div>
           <span className="text-[10px] font-medium text-emerald-500 uppercase">
-            High ATS Probability
+            Strong Role Match
           </span>
         </div>
       </div>
@@ -48,7 +48,7 @@ export const ATSScoreCard: React.FC = () => {
 
         <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800/80 space-y-1">
           <div className="flex items-center justify-between text-[11px] text-neutral-400">
-            <span>Format</span>
+            <span>Formatting</span>
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
           </div>
           <p className="text-sm font-bold font-mono text-white">
@@ -68,7 +68,7 @@ export const ATSScoreCard: React.FC = () => {
 
         <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800/80 space-y-1">
           <div className="flex items-center justify-between text-[11px] text-neutral-400">
-            <span>Brevity</span>
+            <span>Conciseness</span>
             <ShieldCheck className="w-3 h-3 text-purple-400" />
           </div>
           <p className="text-sm font-bold font-mono text-white">

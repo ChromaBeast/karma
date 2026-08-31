@@ -21,14 +21,14 @@ export default function ResumePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white tracking-tight">
-              ATS-Tailored Resume Engine
+              1-Page Tailored Resume Builder
             </h1>
             <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800/60 text-emerald-400">
-              <DecryptedText text="1-Page Knapsack Solver" speed={25} />
+              <DecryptedText text="1-Page Layout Optimizer" speed={25} />
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Re-ranks and fits career achievements under strict single-page character constraints.
+            Selects your top matching accomplishments and fits them cleanly onto one page.
           </p>
         </div>
 

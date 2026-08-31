@@ -12,8 +12,8 @@ export const BulletSelector: React.FC = () => {
   const handleToggle = (nodeId: string, currentlyIncluded: boolean) => {
     toggleResumeBullet(nodeId);
     addToast({
-      title: currentlyIncluded ? 'Bullet Removed' : 'Bullet Included',
-      description: 'Knapsack character budget recalculated in real-time.',
+      title: currentlyIncluded ? 'Bullet Point Removed' : 'Bullet Point Added',
+      description: 'Page character count recalculated in real time.',
       type: 'info',
     });
   };
@@ -24,11 +24,11 @@ export const BulletSelector: React.FC = () => {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-indigo-400" />
           <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-            Re-Ranked Career Nodes
+            Tailored Bullet Points
           </h3>
         </div>
-        <span className="text-[10px] text-neutral-500 font-mono">
-          Cosine Sim + LLM Re-Rank
+        <span className="text-[10px] text-neutral-400 font-medium">
+          Ranked for this role
         </span>
       </div>
 
