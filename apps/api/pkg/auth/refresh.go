@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"sync"
@@ -21,18 +23,23 @@ var (
 
 type RefreshTokenManager struct {
 	mu     sync.RWMutex
-	tokens map[string]*models.RefreshToken // key: token_hash
+	db     *sql.DB
+	tokens map[string]*models.RefreshToken
 	ttl    time.Duration
 }
 
-func NewRefreshTokenManager(ttl time.Duration) *RefreshTokenManager {
+func NewRefreshTokenManager(ttl time.Duration, db ...*sql.DB) *RefreshTokenManager {
 	if ttl <= 0 {
-		ttl = 30 * 24 * time.Hour
+		ttl = 90 * 24 * time.Hour
 	}
-	return &RefreshTokenManager{
+	mgr := &RefreshTokenManager{
 		tokens: make(map[string]*models.RefreshToken),
 		ttl:    ttl,
 	}
+	if len(db) > 0 && db[0] != nil {
+		mgr.db = db[0]
+	}
+	return mgr
 }
 
 func HashToken(rawToken string) string {
@@ -67,6 +74,11 @@ func (m *RefreshTokenManager) CreateInitialToken(userID uuid.UUID) (string, *mod
 		CreatedAt: now,
 	}
 
+	if m.db != nil {
+		q := `INSERT INTO refresh_tokens (id, user_id, family_id, token_hash, expires_at, created_at) VALUES ($1, $2, $3, $4, $5, $6);`
+		_, _ = m.db.ExecContext(context.Background(), q, token.ID, token.UserID, token.FamilyID, token.TokenHash, token.ExpiresAt, token.CreatedAt)
+	}
+
 	m.mu.Lock()
 	m.tokens[tokenHash] = token
 	m.mu.Unlock()
@@ -78,34 +90,49 @@ func (m *RefreshTokenManager) RotateToken(rawToken string) (string, *models.Refr
 	tokenHash := HashToken(rawToken)
 	now := time.Now().UTC()
 
+	var oldToken *models.RefreshToken
+	if m.db != nil {
+		q := `SELECT id, user_id, family_id, token_hash, rotated_from, revoked_at, expires_at, created_at FROM refresh_tokens WHERE token_hash = $1 LIMIT 1;`
+		var t models.RefreshToken
+		err := m.db.QueryRowContext(context.Background(), q, tokenHash).Scan(
+			&t.ID, &t.UserID, &t.FamilyID, &t.TokenHash, &t.RotatedFrom, &t.RevokedAt, &t.ExpiresAt, &t.CreatedAt,
+		)
+		if err == nil {
+			oldToken = &t
+		}
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	oldToken, exists := m.tokens[tokenHash]
-	if !exists {
-		return "", nil, ErrRefreshTokenNotFound
+	if oldToken == nil {
+		var exists bool
+		oldToken, exists = m.tokens[tokenHash]
+		if !exists {
+			return "", nil, ErrRefreshTokenNotFound
+		}
 	}
 
 	if oldToken.RevokedAt != nil {
-		// REUSE DETECTED: Revoke entire family!
-		for _, t := range m.tokens {
-			if t.FamilyID == oldToken.FamilyID && t.RevokedAt == nil {
-				revTime := now
-				t.RevokedAt = &revTime
-			}
-		}
+		m.revokeFamilyInternal(oldToken.FamilyID, now)
 		return "", nil, ErrRefreshTokenReused
 	}
 
 	if now.After(oldToken.ExpiresAt) {
 		revTime := now
 		oldToken.RevokedAt = &revTime
+		if m.db != nil {
+			_, _ = m.db.ExecContext(context.Background(), `UPDATE refresh_tokens SET revoked_at = $1 WHERE id = $2;`, revTime, oldToken.ID)
+		}
 		return "", nil, ErrRefreshTokenExpired
 	}
 
-	// Revoke current token
+	// Revoke old token
 	revTime := now
 	oldToken.RevokedAt = &revTime
+	if m.db != nil {
+		_, _ = m.db.ExecContext(context.Background(), `UPDATE refresh_tokens SET revoked_at = $1 WHERE id = $2;`, revTime, oldToken.ID)
+	}
 
 	// Issue new token in same family
 	newRawToken, err := generateSecureString(32)
@@ -125,29 +152,35 @@ func (m *RefreshTokenManager) RotateToken(rawToken string) (string, *models.Refr
 		CreatedAt:   now,
 	}
 
+	if m.db != nil {
+		q := `INSERT INTO refresh_tokens (id, user_id, family_id, token_hash, rotated_from, expires_at, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7);`
+		_, _ = m.db.ExecContext(context.Background(), q, newToken.ID, newToken.UserID, newToken.FamilyID, newToken.TokenHash, newToken.RotatedFrom, newToken.ExpiresAt, newToken.CreatedAt)
+	}
+
 	m.tokens[newTokenHash] = newToken
 	return newRawToken, newToken, nil
 }
 
-func (m *RefreshTokenManager) RevokeToken(rawToken string) {
-	tokenHash := HashToken(rawToken)
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if t, exists := m.tokens[tokenHash]; exists {
-		now := time.Now().UTC()
-		t.RevokedAt = &now
+func (m *RefreshTokenManager) revokeFamilyInternal(familyID uuid.UUID, now time.Time) {
+	if m.db != nil {
+		_, _ = m.db.ExecContext(context.Background(), `UPDATE refresh_tokens SET revoked_at = $1 WHERE family_id = $2 AND revoked_at IS NULL;`, now, familyID)
+	}
+	for _, t := range m.tokens {
+		if t.FamilyID == familyID && t.RevokedAt == nil {
+			t.RevokedAt = &now
+		}
 	}
 }
 
-func (m *RefreshTokenManager) RevokeFamily(familyID uuid.UUID) {
+func (m *RefreshTokenManager) RevokeToken(rawToken string) {
+	tokenHash := HashToken(rawToken)
+	now := time.Now().UTC()
+	if m.db != nil {
+		_, _ = m.db.ExecContext(context.Background(), `UPDATE refresh_tokens SET revoked_at = $1 WHERE token_hash = $2;`, now, tokenHash)
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
-	now := time.Now().UTC()
-	for _, t := range m.tokens {
-		if t.FamilyID == familyID && t.RevokedAt == nil {
-			revTime := now
-			t.RevokedAt = &revTime
-		}
+	if t, exists := m.tokens[tokenHash]; exists {
+		t.RevokedAt = &now
 	}
 }

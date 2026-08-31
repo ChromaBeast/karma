@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"io"
 	"log"
 	"net/http"
@@ -66,6 +67,7 @@ func BuildDependencies() ServerDependencies {
 	var portRepo *repository.PortfolioRepository
 	var resumeRepo *repository.ResumeRepository
 	var mockupRepo *repository.MockupRepository
+	var dbConn *sql.DB
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL != "" {
@@ -78,12 +80,13 @@ func BuildDependencies() ServerDependencies {
 			if err := db.RunMigrations(ctx, database.Pool); err != nil {
 				log.Printf("⚠️ Auto-migration error: %v", err)
 			}
-			userRepo = repository.NewUserRepository(database.Pool)
-			careerRepo = repository.NewCareerRepository(database.Pool)
-			vaultRepo = repository.NewVaultRepository(database.Pool)
-			portRepo = repository.NewPortfolioRepository(database.Pool)
-			resumeRepo = repository.NewResumeRepository(database.Pool)
-			mockupRepo = repository.NewMockupRepository(database.Pool)
+			dbConn = database.Pool
+			userRepo = repository.NewUserRepository(dbConn)
+			careerRepo = repository.NewCareerRepository(dbConn)
+			vaultRepo = repository.NewVaultRepository(dbConn)
+			portRepo = repository.NewPortfolioRepository(dbConn)
+			resumeRepo = repository.NewResumeRepository(dbConn)
+			mockupRepo = repository.NewMockupRepository(dbConn)
 		}
 	} else {
 		log.Println("ℹ️ DATABASE_URL not set — running with in-memory persistence")
@@ -95,7 +98,7 @@ func BuildDependencies() ServerDependencies {
 	}
 
 	jwtSvc := auth.NewJWTService(jwtSecret)
-	refMgr := auth.NewRefreshTokenManager(30 * 24 * time.Hour)
+	refMgr := auth.NewRefreshTokenManager(90*24*time.Hour, dbConn)
 	authH := auth.NewAuthHandler(jwtSvc, refMgr, userRepo)
 
 	vaultSvc := vault.NewVaultService(kms, vaultRepo)

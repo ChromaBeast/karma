@@ -32,7 +32,7 @@ func NewJWTService(secret string) *JWTService {
 	return &JWTService{
 		secretKey: []byte(secret),
 		issuer:    "karma-api",
-		ttl:       15 * time.Minute,
+		ttl:       7 * 24 * time.Hour,
 	}
 }
 
