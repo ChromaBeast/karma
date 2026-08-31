@@ -15,13 +15,13 @@ export const CtaBanner: React.FC = () => {
 
       <div className="space-y-3 max-w-2xl mx-auto relative z-10">
         <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-          Ready to turn your shipped work into <br />
+          Start keeping track of <br />
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-purple-200 to-pink-300">
-            <ShinyText text="compounding career equity?" speed={3} />
+            <ShinyText text="what you build today." speed={3} />
           </span>
         </h2>
         <p className="text-xs sm:text-sm text-neutral-300">
-          Join thousands of high-output engineers building automated ATS resumes, proof mockups, and personal portfolio hubs.
+          Save your first shipped project in 30 seconds. Build tailored 1-page resumes and portfolio pages whenever you need them.
         </p>
       </div>
 
@@ -39,16 +39,16 @@ export const CtaBanner: React.FC = () => {
           className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-200 text-xs sm:text-sm font-semibold border border-neutral-700 transition-all active:scale-95"
         >
           <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>1-Click Instant Demo</span>
+          <span>1-Click Live Demo</span>
         </button>
       </div>
 
       <div className="flex items-center justify-center gap-4 text-[11px] text-neutral-400 pt-2 relative z-10">
-        <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-emerald-400" /> BYOK Envelope Encryption</span>
+        <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-emerald-400" /> Encrypted BYOK Vault</span>
         <span>·</span>
         <span>No Credit Card Required</span>
         <span>·</span>
-        <span>100% Free Forever Tier</span>
+        <span>Free Tier Available</span>
       </div>
     </div>
   );

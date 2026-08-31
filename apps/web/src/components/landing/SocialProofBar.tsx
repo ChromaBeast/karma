@@ -1,45 +1,45 @@
 'use client';
 
 import React from 'react';
-import { GitBranch, ShieldCheck, Zap, Award } from 'lucide-react';
+import { FileText, Clock, ShieldCheck, Zap } from 'lucide-react';
 import { CountUp } from '@karma/ui';
 
 const METRICS = [
   {
-    icon: Award,
-    value: 99.4,
-    suffix: '%',
-    decimals: 1,
-    label: 'ATS Parser Pass Rate',
-    detail: 'Single-page Knapsack budget',
+    icon: FileText,
+    value: 1,
+    suffix: ' Page',
+    decimals: 0,
+    label: 'Hard Page Constraint',
+    detail: 'Never overflows to an awkward page 2',
     color: 'text-indigo-400',
   },
   {
-    icon: GitBranch,
-    value: 14850,
-    suffix: '+',
+    icon: Clock,
+    value: 10,
+    suffix: 's',
     decimals: 0,
-    label: 'Career Nodes Structured',
-    detail: 'STAR & XYZ achievement graph',
+    label: 'Quick-Add Logging',
+    detail: 'Save a win right as you merge your PR',
     color: 'text-purple-400',
-  },
-  {
-    icon: Zap,
-    value: 12,
-    suffix: 'ms',
-    decimals: 0,
-    label: 'pgvector Query Latency',
-    detail: 'Cosine similarity ranking',
-    color: 'text-amber-400',
   },
   {
     icon: ShieldCheck,
     value: 100,
     suffix: '%',
     decimals: 0,
-    label: 'Zero-Knowledge BYOK',
-    detail: 'AES-256-GCM Envelope Encryption',
+    label: 'Private & Encrypted',
+    detail: 'Your API keys stay encrypted in PostgreSQL',
     color: 'text-emerald-400',
+  },
+  {
+    icon: Zap,
+    value: 2,
+    suffix: 'ms',
+    decimals: 0,
+    label: 'Search & Match Speed',
+    detail: 'Fast pgvector matching against job descriptions',
+    color: 'text-amber-400',
   },
 ];
 
@@ -62,7 +62,7 @@ export const SocialProofBar: React.FC = () => {
                 <CountUp to={m.value} duration={2} decimals={m.decimals} />
                 <span className={m.color}>{m.suffix}</span>
               </div>
-              <p className="text-[11px] text-neutral-500 mt-0.5 font-medium">{m.detail}</p>
+              <p className="text-[11px] text-neutral-400 mt-0.5 font-normal">{m.detail}</p>
             </div>
           </div>
         );

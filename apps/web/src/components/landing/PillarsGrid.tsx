@@ -7,44 +7,44 @@ import { SpotlightCard } from '@karma/ui';
 
 const PILLARS = [
   {
-    title: 'Dynamic Career Graph',
-    subtitle: 'Event-Driven Capture & Vector Embedding',
+    title: 'Career Timeline & Brag Sheet',
+    subtitle: 'Capture what you build as it happens',
     icon: GitGraph,
     color: 'text-indigo-400',
     borderColor: 'hover:border-indigo-500/50',
-    description: 'Every commit, launch, or win is logged into an immutable event queue. Background workers extract STAR/XYZ metrics and index embeddings with pgvector.',
+    description: 'Keep a live record of every major project, bugfix, and architecture change with real metrics (latency dropped, money saved, scale supported).',
     link: '/career',
-    features: ['STAR/XYZ structuring', 'pgvector cosine retrieval', 'Immutable event logs'],
+    features: ['Quick 1-line logging', 'Automatic action & metric formatting', 'Full exportable history in PostgreSQL'],
   },
   {
-    title: 'ATS-Tailored Resume Engine',
-    subtitle: 'Greedy Knapsack Character Optimizer',
+    title: '1-Page Tailored Resume Builder',
+    subtitle: 'Fitted mathematically to one page',
     icon: FileText,
     color: 'text-purple-400',
     borderColor: 'hover:border-purple-500/50',
-    description: 'Parse any job description, retrieve the highest-matching career nodes, and pack achievements into a strict single-page character budget without overflow.',
+    description: 'Paste any job posting. Karma pulls your most relevant bullet points and fits them to a clean 1-page template with zero margin hacks.',
     link: '/resume',
-    features: ['Single-page character budget', 'JD semantic keyword match', 'ATS-compliant layout'],
+    features: ['Targeted keyword matching', 'Strict 1-page character budget', 'Clean ATS-friendly formatting'],
   },
   {
-    title: 'LinkedIn Optimization Suite',
-    subtitle: 'High-Impact Headlines & Thought Leadership',
+    title: 'Interview & Career Prep Tools',
+    subtitle: 'Tailored to your actual experience',
     icon: Linkedin,
     color: 'text-sky-400',
     borderColor: 'hover:border-sky-500/50',
-    description: 'Transform shipped projects into viral copy-ready thought leadership posts, keyword-front-loaded experience bullets, and optimized headlines.',
+    description: 'Generate realistic interview questions based on your projects, draft cover letters in seconds, and write concise LinkedIn summary bullets.',
     link: '/tools',
-    features: ['Thought leadership drafter', 'Experience bullet optimizer', 'Mock interview simulations'],
+    features: ['System design & behavioral mock Qs', 'Company-targeted cover letters', 'LinkedIn headline & post drafts'],
   },
   {
-    title: 'BYOK Security Vault',
-    subtitle: 'AES-256-GCM Envelope Encryption',
+    title: 'Private BYOK Vault',
+    subtitle: 'Bring your own API keys',
     icon: ShieldCheck,
     color: 'text-emerald-400',
     borderColor: 'hover:border-emerald-500/50',
-    description: 'Bring Your Own Keys with hardware-backed envelope encryption. Outbound calls are restricted to allow-listed LLM provider URLs at the network layer.',
+    description: 'Use your own OpenAI or Anthropic API key to pay wholesale rates (~$0.01 per resume). Keys are encrypted on the database and never stored in plain text.',
     link: '/vault',
-    features: ['Per-user data keys', 'Network base-URL lock', 'KMS envelope encryption'],
+    features: ['Encrypted with AES-256 in PostgreSQL', 'Decrypted only during live requests', 'No recurring $30/mo subscription'],
   },
 ];
 
@@ -53,8 +53,8 @@ export const PillarsGrid: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between px-1">
         <div>
-          <h2 className="text-lg font-bold text-white tracking-tight">Core Architecture Pillars</h2>
-          <p className="text-xs text-neutral-400">Production-grade modules designed to compound your professional equity</p>
+          <h2 className="text-lg font-bold text-white tracking-tight">Everything in one place</h2>
+          <p className="text-xs text-neutral-400">Tools designed to make documenting and advancing your career painless</p>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ export const PillarsGrid: React.FC = () => {
                     href={pillar.link}
                     className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white transition-colors"
                   >
-                    <span>Launch</span>
+                    <span>Open</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

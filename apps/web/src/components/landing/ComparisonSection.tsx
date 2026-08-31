@@ -5,34 +5,29 @@ import { Check, X, Sparkles } from 'lucide-react';
 
 const COMPARISONS = [
   {
-    feature: 'Achievement Storage',
-    traditional: 'Scattered static PDFs & Word docs',
-    karma: 'Immutable Vector Graph in Neon PostgreSQL',
+    feature: 'Tracking Work',
+    traditional: 'Digging through old Jira tickets and closed PRs at review time',
+    karma: 'Quick log anytime you ship. Metrics and dates saved in one place.',
   },
   {
-    feature: 'Job Tailoring',
-    traditional: 'Manual copy-pasting for hours',
-    karma: 'Semantic pgvector Knapsack ranking in 3s',
+    feature: 'Customizing for Roles',
+    traditional: 'Spending 2 hours manually editing bullet points for each application',
+    karma: 'Paste the job description. Karma selects your top matching wins.',
   },
   {
-    feature: 'Page Length Guarantee',
-    traditional: 'Random 2nd-page overflow & awkward spacing',
-    karma: 'Strict single-page character budget optimizer',
+    feature: 'Page Length',
+    traditional: 'Fiddling with margins to avoid 2 awkward lines spilling to page 2',
+    karma: 'Calculated character budget guarantees a crisp 1-page PDF.',
   },
   {
-    feature: 'Event Capture',
-    traditional: 'Forgotten wins by performance review time',
-    karma: 'Instant Slack, Quick-Add & commit ingestion',
+    feature: 'Pricing & Privacy',
+    traditional: '$25–$40/month subscriptions that lock your data on their servers',
+    karma: 'One-time access. Bring your own keys with zero markup.',
   },
   {
-    feature: 'AI Pricing & Privacy',
-    traditional: '$29/mo SaaS lock-in with server-stored keys',
-    karma: 'One-time access + BYOK Zero-Knowledge Vault',
-  },
-  {
-    feature: 'Visual Proof of Work',
-    traditional: 'Plain text bullet points without evidence',
-    karma: 'Interactive 3D mockups & custom portfolio domain',
+    feature: 'Visual Proof',
+    traditional: 'Plain text bullets without screenshots or live evidence',
+    karma: 'Clean device mockups and a hosted portfolio site with custom domain.',
   },
 ];
 
@@ -41,20 +36,20 @@ export const ComparisonSection: React.FC = () => {
     <div className="space-y-6 pt-4">
       <div className="text-center space-y-2 max-w-xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Why Traditional Resumes Fail
+          How Karma compares
         </h2>
         <p className="text-xs text-neutral-400">
-          Static PDFs lose your accomplishments. A compounding graph preserves and multiplies your career equity.
+          Built for engineers who want a pragmatic, low-overhead way to manage their career.
         </p>
       </div>
 
       <div className="rounded-3xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-md overflow-hidden shadow-xl">
         <div className="grid grid-cols-12 p-4 sm:p-5 bg-neutral-950/80 border-b border-neutral-800 text-xs font-bold uppercase tracking-wider">
-          <div className="col-span-4 text-neutral-400">Capability</div>
-          <div className="col-span-4 text-rose-400/90">Legacy Resume Builders</div>
+          <div className="col-span-4 text-neutral-400">Task</div>
+          <div className="col-span-4 text-rose-400/90">The Old Way</div>
           <div className="col-span-4 text-indigo-400 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Karma OS</span>
+            <span>With Karma</span>
           </div>
         </div>
 

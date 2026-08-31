@@ -15,37 +15,37 @@ export const LandingFooter: React.FC = () => {
             </div>
             <span className="font-bold text-white text-sm">Karma</span>
           </div>
-          <p className="text-[11px] text-neutral-500 leading-relaxed">
-            The Career Compounding Operating System. Turn what you ship into career equity.
+          <p className="text-[11px] text-neutral-400 leading-relaxed">
+            The developer brag document that builds your resumes and portfolio as you ship.
           </p>
           <div className="flex items-center gap-2 text-[11px] text-emerald-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>All Systems Operational</span>
+            <span>Operational on Neon + Go</span>
           </div>
         </div>
 
         <div className="space-y-2.5">
-          <div className="font-bold text-white text-xs uppercase tracking-wider">Product</div>
+          <div className="font-bold text-white text-xs uppercase tracking-wider">Features</div>
           <ul className="space-y-1.5 text-[11px]">
-            <li><Link href="/career" className="hover:text-white transition-colors">Career Graph</Link></li>
-            <li><Link href="/resume" className="hover:text-white transition-colors">ATS Knapsack Engine</Link></li>
-            <li><Link href="/mockups" className="hover:text-white transition-colors">Proof Mockup Studio</Link></li>
-            <li><Link href="/portfolio" className="hover:text-white transition-colors">Portfolio Hub</Link></li>
+            <li><Link href="/career" className="hover:text-white transition-colors">Career Timeline</Link></li>
+            <li><Link href="/resume" className="hover:text-white transition-colors">1-Page Resume Builder</Link></li>
+            <li><Link href="/mockups" className="hover:text-white transition-colors">Proof Mockups</Link></li>
+            <li><Link href="/portfolio" className="hover:text-white transition-colors">Portfolio CMS</Link></li>
           </ul>
         </div>
 
         <div className="space-y-2.5">
-          <div className="font-bold text-white text-xs uppercase tracking-wider">Security & Tech</div>
+          <div className="font-bold text-white text-xs uppercase tracking-wider">Privacy &amp; Security</div>
           <ul className="space-y-1.5 text-[11px]">
-            <li><Link href="/vault" className="hover:text-white transition-colors flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> BYOK Envelope Vault</Link></li>
-            <li><span className="text-neutral-500">Neon PostgreSQL + pgvector</span></li>
+            <li><Link href="/vault" className="hover:text-white transition-colors flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> AES-256 Key Vault</Link></li>
+            <li><span className="text-neutral-500">PostgreSQL + pgvector</span></li>
             <li><span className="text-neutral-500">Go API Gateway</span></li>
-            <li><span className="text-neutral-500">Zero-Lock-in UI</span></li>
+            <li><span className="text-neutral-500">Export Anytime (JSON/MD)</span></li>
           </ul>
         </div>
 
         <div className="space-y-2.5">
-          <div className="font-bold text-white text-xs uppercase tracking-wider">Community</div>
+          <div className="font-bold text-white text-xs uppercase tracking-wider">Open Source</div>
           <ul className="space-y-1.5 text-[11px]">
             <li>
               <a
@@ -58,15 +58,15 @@ export const LandingFooter: React.FC = () => {
                 <span>GitHub Repository</span>
               </a>
             </li>
-            <li><Link href="/tools" className="hover:text-white transition-colors">Career Tools</Link></li>
+            <li><Link href="/tools" className="hover:text-white transition-colors">Interview &amp; Career Tools</Link></li>
           </ul>
         </div>
       </div>
 
       <div className="pt-6 border-t border-neutral-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-neutral-500">
-        <div>&copy; {new Date().getFullYear()} Karma. Released under MIT License.</div>
+        <div>&copy; {new Date().getFullYear()} Karma. MIT License.</div>
         <div className="flex items-center gap-1">
-          <span>Crafted for high-output builders with</span>
+          <span>Built for developers with</span>
           <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" />
         </div>
       </div>

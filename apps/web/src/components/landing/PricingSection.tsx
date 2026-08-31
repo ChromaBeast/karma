@@ -6,29 +6,47 @@ import { useAuth } from '../../context/AuthContext';
 
 const TIERS = [
   {
-    name: 'Free Community',
+    name: 'Free',
     price: '$0',
     frequency: 'forever',
-    description: 'Essential career graph capture and standard resume generation.',
-    features: ['Manual career event capture', '1 Active ATS resume', 'Standard subdomain portfolio', 'Community question banks'],
+    description: 'Track your career timeline and export standard resumes.',
+    features: [
+      'Log unlimited career wins & PRs',
+      '1 active tailored resume',
+      'Hosted portfolio on karma subdomain',
+      'Export plain text & markdown',
+    ],
     cta: 'Start Free',
     highlighted: false,
   },
   {
-    name: 'Access (BYOK)',
+    name: 'Lifetime (BYOK)',
     price: '$49',
-    frequency: 'one-time fee',
-    description: 'Lifetime access with your own LLM keys (Anthropic, OpenAI, Gemini).',
-    features: ['BYOK Envelope Encryption Vault', 'Unlimited pgvector ATS resumes', 'Custom domain with auto-SSL', 'Mock interview simulations', 'Network base-URL lock guarantee'],
+    frequency: 'one-time payment',
+    description: 'Bring your own API keys. Pay only the raw API cost (~$0.01 per resume).',
+    features: [
+      'Encrypted API Key Vault (OpenAI, Anthropic)',
+      'Unlimited 1-page tailored resumes',
+      'Custom domain support with free SSL',
+      'High-res 3D device mockups',
+      'AI mock interview simulator',
+      'Lifetime updates with zero subscription',
+    ],
     cta: 'Get Lifetime Access',
     highlighted: true,
   },
   {
-    name: 'Access + Credits',
+    name: 'Lifetime + Credits',
     price: '$79',
-    frequency: 'one-time + managed credits',
-    description: 'All Access features plus pre-funded managed AI generation credits.',
-    features: ['Everything in Access (BYOK)', '$30 Managed LLM credit balance', 'Zero API setup required', 'Priority queue event structuring', 'Automated weekly check-in nudges'],
+    frequency: 'one-time + credits',
+    description: 'Everything in Lifetime plus $30 in pre-funded AI credits so you don’t need your own API keys.',
+    features: [
+      'Everything in Lifetime (BYOK)',
+      '$30 managed AI generation balance',
+      'No API key setup required',
+      'Priority background parsing',
+      'Weekly reminder emails to log wins',
+    ],
     cta: 'Get Access + Credits',
     highlighted: false,
   },
@@ -41,10 +59,10 @@ export const PricingSection: React.FC = () => {
     <div className="space-y-6 pt-4">
       <div className="text-center space-y-2 max-w-xl mx-auto">
         <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-          Sustainable, One-Time Access Model
+          Simple, one-time pricing
         </h2>
         <p className="text-xs text-neutral-400">
-          No recurring SaaS subscriptions. Bring your own API keys or use metered managed credits.
+          No monthly subscriptions that charge you while you’re happily employed.
         </p>
       </div>
 
@@ -64,7 +82,7 @@ export const PricingSection: React.FC = () => {
                 {tier.highlighted && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-[10px] font-semibold text-indigo-300 border border-indigo-500/40">
                     <Sparkles className="w-3 h-3 text-indigo-400" />
-                    Popular
+                    Best Value
                   </span>
                 )}
               </div>

@@ -7,23 +7,23 @@ import { SpotlightCard } from '@karma/ui';
 const TESTIMONIALS = [
   {
     name: 'Marcus Vance',
-    role: 'Staff Infrastructure Architect',
-    company: 'Ex-Uber · Series B FinTech',
-    text: 'Karma solved the single biggest issue senior engineers have: remembering what we actually shipped 9 months ago. The STAR graph structured my promo packet effortlessly.',
+    role: 'Senior Backend Engineer',
+    company: 'FinTech',
+    text: 'I used to dread writing self-reviews every December because I couldn’t remember what I shipped in March. Now I drop a quick 1-line note right after merging a major PR.',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120',
   },
   {
     name: 'Elena Rostova',
-    role: 'Senior Machine Learning Engineer',
-    company: 'AI Research Lab',
-    text: 'The knapsack resume optimizer is pure genius. No more fighting with margins or deleting bullet points manually. It packs the highest-scoring keywords into exactly 1 page.',
+    role: 'Infrastructure Engineer',
+    company: 'Cloud Platform',
+    text: 'The 1-page resume constraint actually works. It picks only the accomplishments that fit the job description and cuts out the fluff without me messing with 9pt font margins.',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120',
   },
   {
     name: 'Devin Thorne',
-    role: 'Founding Engineer',
-    company: 'YC W24 Alum',
-    text: 'BYOK envelope encryption was the dealmaker. I can feed real proprietary system metrics knowing zero plain text keys or IP are stored unencrypted on external servers.',
+    role: 'Full-Stack Developer',
+    company: 'Startup Founder',
+    text: 'Bringing my own OpenAI and Anthropic keys without getting locked into a $30/month subscription was the deciding factor. Simple, fast, and stays out of the way.',
     avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120',
   },
 ];
@@ -33,10 +33,10 @@ export const TestimonialsSection: React.FC = () => {
     <div className="space-y-6 pt-4">
       <div className="text-center space-y-2 max-w-xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Built for High-Output Engineers
+          What engineers say
         </h2>
         <p className="text-xs text-neutral-400">
-          Trusted by staff architects, founding engineers, and tech leads worldwide.
+          Used by developers to keep their brag sheets updated and resumes ready.
         </p>
       </div>
 
