@@ -13,9 +13,11 @@ import (
 
 	"karma/apps/api/pkg/auth"
 	"karma/apps/api/pkg/career"
+	"karma/apps/api/pkg/db"
 	"karma/apps/api/pkg/llm"
 	"karma/apps/api/pkg/mockup"
 	"karma/apps/api/pkg/portfolio"
+	"karma/apps/api/pkg/repository"
 	"karma/apps/api/pkg/resume"
 	"karma/apps/api/pkg/tools"
 	"karma/apps/api/pkg/vault"
@@ -29,14 +31,35 @@ func BuildDependencies() ServerDependencies {
 		log.Fatalf("failed to initialize KMS key: %v", err)
 	}
 
+	var careerRepo *repository.CareerRepository
+	var vaultRepo *repository.VaultRepository
+
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		database, err := db.Connect(ctx, dbURL)
+		if err != nil {
+			log.Printf("⚠️ PostgreSQL connection failed: %v (falling back to memory)", err)
+		} else {
+			if err := db.RunMigrations(ctx, database.Pool); err != nil {
+				log.Printf("⚠️ Auto-migration error: %v", err)
+			}
+			careerRepo = repository.NewCareerRepository(database.Pool)
+			vaultRepo = repository.NewVaultRepository(database.Pool)
+		}
+	} else {
+		log.Println("ℹ️ DATABASE_URL not set — running with in-memory persistence")
+	}
+
 	jwtSvc := auth.NewJWTService("karma-production-secret-key-32b-secure")
 	refMgr := auth.NewRefreshTokenManager(30 * 24 * time.Hour)
 	authH := auth.NewAuthHandler(jwtSvc, refMgr)
 
-	vaultSvc := vault.NewVaultService(kms)
+	vaultSvc := vault.NewVaultService(kms, vaultRepo)
 	vaultH := vault.NewVaultHandler(vaultSvc)
 
-	careerSvc := career.NewCareerService()
+	careerSvc := career.NewCareerService(careerRepo)
 	careerH := career.NewCareerHandler(careerSvc)
 
 	resumeSvc := resume.NewResumeService()

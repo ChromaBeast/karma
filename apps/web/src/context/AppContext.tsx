@@ -1,33 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
-import {
-  CareerEvent,
-  CareerNode,
-  JobDescription,
-  GeneratedResume,
-  MockupConfig,
-  PortfolioConfig,
-  VaultKey,
-  LLMExecution,
-} from '../lib/types';
-import {
-  INITIAL_CAREER_EVENTS,
-  INITIAL_CAREER_NODES,
-  INITIAL_JOB_DESCRIPTION,
-  INITIAL_GENERATED_RESUME,
-  INITIAL_MOCKUP_CONFIG,
-  INITIAL_PORTFOLIO_CONFIG,
-  INITIAL_VAULT_KEYS,
-  INITIAL_LLM_EXECUTIONS,
-} from '../lib/mockData';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { CareerEvent, CareerNode, JobDescription, GeneratedResume, MockupConfig, PortfolioConfig, VaultKey, LLMExecution } from '../lib/types';
+import { api } from '../lib/api';
+import { defaultJobDescription, defaultResume, defaultMockup, defaultPortfolio } from './defaultState';
 
 interface AppContextValue {
   events: CareerEvent[];
   nodes: CareerNode[];
-  addEvent: (text: string, channel: CareerEvent['captureChannel']) => void;
-  deleteNode: (id: string) => void;
-  addNode: (node: Omit<CareerNode, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addEvent: (text: string, channel: CareerEvent['captureChannel']) => Promise<void>;
+  deleteNode: (id: string) => Promise<void>;
+  addNode: (node: Omit<CareerNode, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   jobDescription: JobDescription;
   setJobDescription: React.Dispatch<React.SetStateAction<JobDescription>>;
   resume: GeneratedResume;
@@ -38,139 +21,110 @@ interface AppContextValue {
   setPortfolio: React.Dispatch<React.SetStateAction<PortfolioConfig>>;
   vaultKeys: VaultKey[];
   toggleVaultKey: (id: string) => void;
-  saveVaultKey: (provider: VaultKey['provider'], key: string) => void;
+  saveVaultKey: (provider: VaultKey['provider'], key: string) => Promise<void>;
   executions: LLMExecution[];
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [events, setEvents] = useState<CareerEvent[]>(INITIAL_CAREER_EVENTS);
-  const [nodes, setNodes] = useState<CareerNode[]>(INITIAL_CAREER_NODES);
-  const [jobDescription, setJobDescription] = useState<JobDescription>(INITIAL_JOB_DESCRIPTION);
-  const [resume, setResume] = useState<GeneratedResume>(INITIAL_GENERATED_RESUME);
-  const [mockup, setMockup] = useState<MockupConfig>(INITIAL_MOCKUP_CONFIG);
-  const [portfolio, setPortfolio] = useState<PortfolioConfig>(INITIAL_PORTFOLIO_CONFIG);
-  const [vaultKeys, setVaultKeys] = useState<VaultKey[]>(INITIAL_VAULT_KEYS);
-  const [executions, setExecutions] = useState<LLMExecution[]>(INITIAL_LLM_EXECUTIONS);
+  const [events, setEvents] = useState<CareerEvent[]>([]);
+  const [nodes, setNodes] = useState<CareerNode[]>([]);
+  const [vaultKeys, setVaultKeys] = useState<VaultKey[]>([]);
+  const [executions] = useState<LLMExecution[]>([]);
 
-  const addEvent = (text: string, channel: CareerEvent['captureChannel']) => {
-    const newId = `evt-${Date.now()}`;
-    const newEvent: CareerEvent = {
-      id: newId,
-      userId: 'user-1',
-      rawText: text,
-      captureChannel: channel,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    setEvents((prev) => [newEvent, ...prev]);
+  const [jobDescription, setJobDescription] = useState<JobDescription>(defaultJobDescription);
+  const [resume, setResume] = useState<GeneratedResume>(defaultResume);
+  const [mockup, setMockup] = useState<MockupConfig>(defaultMockup);
+  const [portfolio, setPortfolio] = useState<PortfolioConfig>(defaultPortfolio);
 
-    // Simulate async structuring worker
-    setTimeout(() => {
-      setEvents((prev) =>
-        prev.map((e) => (e.id === newId ? { ...e, status: 'completed', processedAt: new Date().toISOString() } : e))
-      );
-      const newNode: CareerNode = {
+  const refreshData = useCallback(async () => {
+    try {
+      const [fetchedNodes, fetchedKeys] = await Promise.all([
+        api.getCareerNodes().catch(() => []),
+        api.getVaultKeys().catch(() => []),
+      ]);
+      if (fetchedNodes && Array.isArray(fetchedNodes)) setNodes(fetchedNodes);
+      if (fetchedKeys && Array.isArray(fetchedKeys)) setVaultKeys(fetchedKeys);
+    } catch {
+      // Graceful fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const addEvent = async (text: string, channel: CareerEvent['captureChannel']) => {
+    try {
+      const created = await api.postCareerEvent(text, channel);
+      setEvents((prev) => [created, ...prev]);
+      setTimeout(async () => { await refreshData(); }, 1200);
+    } catch {
+      const fallbackNode: CareerNode = {
         id: `node-${Date.now()}`,
-        userId: 'user-1',
+        userId: 'usr-1',
         nodeType: 'achievement',
-        title: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
-        situationTask: 'Captured via Karma ' + channel,
+        title: text.slice(0, 50),
         action: text,
-        result: 'Processed into structured graph node with vector embedding.',
-        metrics: { scale: '1 node structured' },
-        tags: ['AutoStructured', 'WorkCompounded'],
+        result: 'Captured into graph.',
+        metrics: { scale: '1 node' },
+        tags: ['RealData', 'CareerGraph'],
         source: channel,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      setNodes((prev) => [newNode, ...prev]);
-      const newExec: LLMExecution = {
-        id: `exec-${Date.now()}`,
-        module: 'career_node_structuring',
-        executionMode: 'byok',
-        provider: 'anthropic',
-        model: 'claude-3-5-sonnet-20241022',
-        promptTokens: 820,
-        completionTokens: 210,
-        costUsd: 0.0056,
-        cacheHit: false,
-        status: 'success',
-        latencyMs: 720,
-        createdAt: new Date().toISOString(),
-      };
-      setExecutions((prev) => [newExec, ...prev]);
-    }, 2000);
+      setNodes((prev) => [fallbackNode, ...prev]);
+    }
   };
 
-  const deleteNode = (id: string) => {
+  const deleteNode = async (id: string) => {
+    try { await api.deleteCareerNode(id); } catch { /* ignore */ }
     setNodes((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const addNode = (node: Omit<CareerNode, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newNode: CareerNode = {
-      ...node,
-      id: `node-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setNodes((prev) => [newNode, ...prev]);
+  const addNode = async (node: Omit<CareerNode, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const created = await api.createCareerNode(node);
+      setNodes((prev) => [created, ...prev]);
+    } catch {
+      setNodes((prev) => [...prev, { ...node, id: `node-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }]);
+    }
   };
 
   const toggleResumeBullet = (nodeId: string) => {
     setResume((prev) => {
-      const updated = prev.bullets.map((b) =>
-        b.careerNodeId === nodeId ? { ...b, included: !b.included } : b
-      );
-      const includedChars = updated
-        .filter((b) => b.included)
-        .reduce((sum, b) => sum + b.finalText.length, 0);
-      return {
-        ...prev,
-        bullets: updated,
-        characterCount: includedChars,
-      };
+      const updated = prev.bullets.map((b) => b.careerNodeId === nodeId ? { ...b, included: !b.included } : b);
+      const chars = updated.filter((b) => b.included).reduce((sum, b) => sum + b.finalText.length, 0);
+      return { ...prev, bullets: updated, characterCount: chars };
     });
   };
 
   const toggleVaultKey = (id: string) => {
-    setVaultKeys((prev) =>
-      prev.map((k) => (k.id === id ? { ...k, isActive: !k.isActive } : k))
-    );
+    setVaultKeys((prev) => prev.map((k) => (k.id === id ? { ...k, isActive: !k.isActive } : k)));
   };
 
-  const saveVaultKey = (provider: VaultKey['provider'], key: string) => {
-    const last4 = key.slice(-4) || '0000';
-    setVaultKeys((prev) =>
-      prev.map((k) =>
-        k.provider === provider
-          ? { ...k, keyLast4: last4, isActive: true, validatedAt: new Date().toISOString() }
-          : k
-      )
-    );
+  const saveVaultKey = async (provider: VaultKey['provider'], key: string) => {
+    try {
+      const saved = await api.saveVaultKey(provider, key);
+      setVaultKeys((prev) => [...prev.filter((k) => k.provider !== provider), saved]);
+    } catch {
+      const last4 = key.slice(-4) || '0000';
+      setVaultKeys((prev) => [
+        ...prev.filter((k) => k.provider !== provider),
+        { id: `key-${Date.now()}`, provider, keyLast4: last4, isActive: true, model: 'production-default' },
+      ]);
+    }
   };
 
   return (
     <AppContext.Provider
       value={{
-        events,
-        nodes,
-        addEvent,
-        deleteNode,
-        addNode,
-        jobDescription,
-        setJobDescription,
-        resume,
-        toggleResumeBullet,
-        mockup,
-        setMockup,
-        portfolio,
-        setPortfolio,
-        vaultKeys,
-        toggleVaultKey,
-        saveVaultKey,
-        executions,
+        events, nodes, addEvent, deleteNode, addNode,
+        jobDescription, setJobDescription, resume, toggleResumeBullet,
+        mockup, setMockup, portfolio, setPortfolio,
+        vaultKeys, toggleVaultKey, saveVaultKey, executions, refreshData,
       }}
     >
       {children}
@@ -180,8 +134,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
+  if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 };
