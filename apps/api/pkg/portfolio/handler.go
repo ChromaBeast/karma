@@ -43,6 +43,7 @@ func (h *PortfolioHandler) GetPublic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400")
 	json.NewEncoder(w).Encode(p)
 }
 
