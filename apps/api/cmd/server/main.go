@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -23,7 +25,34 @@ import (
 	"karma/apps/api/pkg/vault"
 )
 
+func loadEnvFile(paths ...string) {
+	for _, path := range paths {
+		f, err := os.Open(path)
+		if err != nil {
+			continue
+		}
+		defer f.Close()
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				k := strings.TrimSpace(parts[0])
+				v := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+				if os.Getenv(k) == "" {
+					os.Setenv(k, v)
+				}
+			}
+		}
+	}
+}
+
 func BuildDependencies() ServerDependencies {
+	loadEnvFile(".env", "../.env")
+
 	kmsMaster := make([]byte, 32)
 	io.ReadFull(rand.Reader, kmsMaster)
 	kms, err := vault.NewKMSMasterKey(kmsMaster)
@@ -36,7 +65,7 @@ func BuildDependencies() ServerDependencies {
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 		database, err := db.Connect(ctx, dbURL)
 		if err != nil {

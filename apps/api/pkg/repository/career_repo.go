@@ -20,7 +20,16 @@ func NewCareerRepository(db *sql.DB) *CareerRepository {
 	return &CareerRepository{db: db}
 }
 
+func (r *CareerRepository) ensureUser(ctx context.Context, userID uuid.UUID) {
+	query := `
+		INSERT INTO users (id, linkedin_sub, email, name, plan_tier)
+		VALUES ($1, $2, $3, $4, 'access_plus_credits')
+		ON CONFLICT (id) DO NOTHING`
+	_, _ = r.db.ExecContext(ctx, query, userID, "sub-"+userID.String()[:8], "user@karma.app", "Karma Member")
+}
+
 func (r *CareerRepository) SaveEvent(ctx context.Context, e *models.CareerNodeEvent) error {
+	r.ensureUser(ctx, e.UserID)
 	query := `
 		INSERT INTO career_node_events (id, user_id, raw_text, capture_channel, created_at)
 		VALUES ($1, $2, $3, $4, $5)`
@@ -51,6 +60,7 @@ func (r *CareerRepository) GetEvent(ctx context.Context, eventID uuid.UUID) (*mo
 }
 
 func (r *CareerRepository) CreateNode(ctx context.Context, n *models.CareerNode) error {
+	r.ensureUser(ctx, n.UserID)
 	metricsJSON, err := json.Marshal(n.Metrics)
 	if err != nil {
 		metricsJSON = []byte("{}")
