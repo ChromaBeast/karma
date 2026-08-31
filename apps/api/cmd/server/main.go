@@ -22,6 +22,7 @@ import (
 	"karma/apps/api/pkg/portfolio"
 	"karma/apps/api/pkg/repository"
 	"karma/apps/api/pkg/resume"
+	"karma/apps/api/pkg/storage"
 	"karma/apps/api/pkg/tools"
 	"karma/apps/api/pkg/vault"
 )
@@ -132,19 +133,21 @@ func BuildDependencies() ServerDependencies {
 	sgSvc := tools.NewSkillGapService(toolsRepo)
 	toolsH := tools.NewToolsHandler(liSvc, intSvc, clSvc, outSvc, sgSvc, careerSvc, resumeSvc)
 
+	storageH := storage.NewStorageHandler()
 	rateLimiter := NewRateLimiter(100, 1*time.Minute)
 
 	return ServerDependencies{
-		JWTService:    jwtSvc,
-		AuthHandler:   authH,
-		VaultHandler:  vaultH,
-		CareerHandler: careerH,
-		ResumeHandler: resumeH,
-		LLMHandler:    llmH,
-		PortHandler:   portH,
-		MockupHandler: mockupH,
-		ToolsHandler:  toolsH,
-		RateLimiter:   rateLimiter,
+		JWTService:     jwtSvc,
+		AuthHandler:    authH,
+		VaultHandler:   vaultH,
+		CareerHandler:  careerH,
+		ResumeHandler:  resumeH,
+		LLMHandler:     llmH,
+		PortHandler:    portH,
+		MockupHandler:  mockupH,
+		ToolsHandler:   toolsH,
+		StorageHandler: storageH,
+		RateLimiter:    rateLimiter,
 	}
 }
 

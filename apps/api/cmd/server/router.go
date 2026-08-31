@@ -13,21 +13,23 @@ import (
 	"karma/apps/api/pkg/mockup"
 	"karma/apps/api/pkg/portfolio"
 	"karma/apps/api/pkg/resume"
+	"karma/apps/api/pkg/storage"
 	"karma/apps/api/pkg/tools"
 	"karma/apps/api/pkg/vault"
 )
 
 type ServerDependencies struct {
-	JWTService    *auth.JWTService
-	AuthHandler   *auth.AuthHandler
-	VaultHandler  *vault.VaultHandler
-	CareerHandler *career.CareerHandler
-	ResumeHandler *resume.ResumeHandler
-	LLMHandler    *llm.LLMHandler
-	PortHandler   *portfolio.PortfolioHandler
-	MockupHandler *mockup.MockupHandler
-	ToolsHandler  *tools.ToolsHandler
-	RateLimiter   *RateLimiter
+	JWTService     *auth.JWTService
+	AuthHandler    *auth.AuthHandler
+	VaultHandler   *vault.VaultHandler
+	CareerHandler  *career.CareerHandler
+	ResumeHandler  *resume.ResumeHandler
+	LLMHandler     *llm.LLMHandler
+	PortHandler    *portfolio.PortfolioHandler
+	MockupHandler  *mockup.MockupHandler
+	ToolsHandler   *tools.ToolsHandler
+	StorageHandler *storage.StorageHandler
+	RateLimiter    *RateLimiter
 }
 
 func SetupRouter(deps ServerDependencies) *chi.Mux {
@@ -62,7 +64,7 @@ func SetupRouter(deps ServerDependencies) *chi.Mux {
 	})
 
 	r.Route("/v1", func(v1 chi.Router) {
-		// Public auth & public portfolio endpoints
+		// Public auth & public endpoints
 		v1.Route("/auth", func(a chi.Router) {
 			a.Post("/login", deps.AuthHandler.EmailLogin)
 			a.Post("/logout", deps.AuthHandler.Logout)
@@ -77,6 +79,9 @@ func SetupRouter(deps ServerDependencies) *chi.Mux {
 		})
 
 		v1.Get("/portfolios/public/{subdomain}", deps.PortHandler.GetPublic)
+		if deps.StorageHandler != nil {
+			v1.Get("/storage/imagekit-auth", deps.StorageHandler.GetImageKitAuth)
+		}
 
 		// Protected endpoints
 		v1.Group(func(p chi.Router) {

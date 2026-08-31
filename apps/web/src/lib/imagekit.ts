@@ -1,10 +1,12 @@
 /**
- * ImageKit CDN Helper for Karma
+ * ImageKit CDN & Direct Upload Helper for Karma
  * Account Endpoint: https://ik.imagekit.io/karmaimgs/
  */
 
 export const IMAGEKIT_ENDPOINT =
   process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/karmaimgs/';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
 
 export interface ImageKitTransformOptions {
   width?: number;
@@ -23,12 +25,10 @@ export function getIKUrl(pathOrUrl: string, opts?: ImageKitTransformOptions): st
 
   const cleanEndpoint = IMAGEKIT_ENDPOINT.replace(/\/+$/, '');
 
-  // If already an absolute URL not on ImageKit, return as is
-  if (pathOrUrl.startsWith('http://') || (pathOrUrl.startsWith('https://') && !pathOrUrl.includes('imagekit.io'))) {
+  if (pathOrUrl.startsWith('http://') || (pathOrUrl.startsWith('https://') && !pathOrUrl.includes('imagekit.io')) || pathOrUrl.startsWith('data:')) {
     return pathOrUrl;
   }
 
-  // Extract relative path
   let relativePath = pathOrUrl;
   if (pathOrUrl.startsWith(cleanEndpoint)) {
     relativePath = pathOrUrl.replace(cleanEndpoint, '');
@@ -52,5 +52,68 @@ export function getIKUrl(pathOrUrl: string, opts?: ImageKitTransformOptions): st
   return `${cleanEndpoint}/${transformStr}/${relativePath}`;
 }
 
-export const DEFAULT_AVATAR = getIKUrl('default-avatar.png', { width: 120, height: 120, format: 'auto' });
-export const DEFAULT_MOCKUP_PREVIEW = getIKUrl('sample-terminal.png', { width: 1200, format: 'auto' });
+export interface UploadResult {
+  url: string;
+  fileId?: string;
+  name: string;
+  size: number;
+}
+
+/**
+ * Direct Client-Side Image Upload to ImageKit
+ */
+export async function uploadToImageKit(
+  file: File,
+  folder: string = 'proof_mockups'
+): Promise<UploadResult> {
+  try {
+    // 1. Fetch upload auth parameters from Go API Gateway
+    const authRes = await fetch(`${API_BASE}/storage/imagekit-auth`);
+    if (!authRes.ok) {
+      throw new Error('Failed to retrieve upload signature');
+    }
+    const authData = await authRes.json();
+
+    // 2. Prepare FormData for ImageKit
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', `${Date.now()}_${file.name.replace(/\s+/g, '_')}`);
+    formData.append('publicKey', authData.publicKey);
+    formData.append('signature', authData.signature);
+    formData.append('expire', String(authData.expire));
+    formData.append('token', authData.token);
+    formData.append('folder', `/${folder}`);
+    formData.append('useUniqueFileName', 'true');
+
+    // 3. Post directly to ImageKit Upload API
+    const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (uploadRes.ok) {
+      const result = await uploadRes.json();
+      return {
+        url: result.url || `${IMAGEKIT_ENDPOINT.replace(/\/+$/, '')}/${result.filePath.replace(/^\/+/, '')}`,
+        fileId: result.fileId,
+        name: result.name || file.name,
+        size: result.size || file.size,
+      };
+    }
+  } catch (err) {
+    console.warn('ImageKit direct upload fallback to local data URI:', err);
+  }
+
+  // 4. Local fast fallback if offline or no keys configured yet
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      resolve({
+        url: e.target?.result as string,
+        name: file.name,
+        size: file.size,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}

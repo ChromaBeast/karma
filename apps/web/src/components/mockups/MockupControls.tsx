@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { Laptop, Smartphone, Globe, Share2, Upload, Code2, Sparkles, Image as ImageIcon } from 'lucide-react';
+import React from 'react';
+import { Laptop, Smartphone, Globe, Share2, Code2, Sparkles, Image as ImageIcon } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { useToast } from '../../context/ToastContext';
 import { MockupConfig } from '../../lib/types';
+import { ImageUploader } from '../common/ImageUploader';
 
 const FRAMES: { id: MockupConfig['frameType']; label: string; icon: React.ElementType }[] = [
   { id: 'macbook', label: 'MacBook Pro', icon: Laptop },
@@ -38,27 +38,6 @@ export const MockupControls: React.FC<ExtendedMockupControlsProps> = ({
   setCodeLang,
 }) => {
   const { mockup, setMockup } = useApp();
-  const { addToast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        setMockup((prev) => ({ ...prev, sourceImageUrl: result }));
-        addToast({
-          title: 'Screenshot Loaded',
-          description: `Loaded "${file.name}" into mockup canvas.`,
-          type: 'success',
-        });
-      }
-    };
-    reader.readAsDataURL(file);
-  };
 
   return (
     <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5">
@@ -149,22 +128,13 @@ export const MockupControls: React.FC<ExtendedMockupControlsProps> = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-indigo-500/40 bg-indigo-950/20 hover:bg-indigo-950/30 text-indigo-300 text-xs font-semibold transition-colors"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Upload Custom Screenshot</span>
-            </button>
-          </div>
+          {/* Direct ImageKit Uploader */}
+          <ImageUploader
+            label="Upload Proof Screenshot"
+            folder="proof_mockups"
+            currentUrl={mockup.sourceImageUrl}
+            onUploadComplete={(url) => setMockup((prev) => ({ ...prev, sourceImageUrl: url }))}
+          />
         </>
       )}
 
