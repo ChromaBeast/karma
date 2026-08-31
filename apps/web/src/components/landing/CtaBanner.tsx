@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Zap, Sparkles, ArrowRight, Shield } from 'lucide-react';
 import { ShinyText, Particles } from '@karma/ui';
 import { useAuth } from '../../context/AuthContext';
 
 export const CtaBanner: React.FC = () => {
-  const { openAuthModal, demoLogin } = useAuth();
+  const { openAuthModal } = useAuth();
 
   return (
     <div className="relative rounded-3xl border border-indigo-500/40 bg-gradient-to-br from-indigo-950 via-neutral-900 to-purple-950/60 p-8 sm:p-12 text-center overflow-hidden shadow-2xl space-y-6">
@@ -34,20 +35,20 @@ export const CtaBanner: React.FC = () => {
           <span>Get Started Free</span>
           <ArrowRight className="w-4 h-4" />
         </button>
-        <button
-          onClick={demoLogin}
+        <Link
+          href="/onboarding"
           className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-200 text-xs sm:text-sm font-semibold border border-neutral-700 transition-all active:scale-95"
         >
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>1-Click Live Demo</span>
-        </button>
+          <Sparkles className="w-4 h-4 text-indigo-400" />
+          <span>Quick Setup Wizard</span>
+        </Link>
       </div>
 
       <div className="flex items-center justify-center gap-4 text-[11px] text-neutral-400 pt-2 relative z-10">
         <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-emerald-400" /> Encrypted BYOK Vault</span>
-        <span>·</span>
+        <span>&middot;</span>
         <span>No Credit Card Required</span>
-        <span>·</span>
+        <span>&middot;</span>
         <span>Free Tier Available</span>
       </div>
     </div>

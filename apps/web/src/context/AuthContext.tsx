@@ -12,21 +12,11 @@ interface AuthContextValue {
   openAuthModal: () => void;
   closeAuthModal: () => void;
   login: (email: string, password?: string, name?: string) => Promise<void>;
-  demoLogin: () => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const DEMO_USER: User = {
-  id: '00000000-0000-0000-0000-000000000001',
-  email: 'alex.chen@karma.app',
-  name: 'Alex Chen',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-  headline: 'Staff Systems Architect · Ex-Stripe',
-  planTier: 'access_plus_credits',
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,14 +31,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const me = await api.getMe();
         setUser(me);
       } catch {
-        // Try refresh
         const refreshed = await api.refreshSession();
         if (refreshed) {
           try {
             const me = await api.getMe();
             setUser(me);
           } catch {
-            setUser(DEMO_USER);
+            setUser(null);
           }
         } else {
           setUser(null);
@@ -78,7 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session.user);
       setIsAuthModalOpen(false);
     } catch {
-      // Fallback
       setUser({
         id: `user-${Date.now()}`,
         email,
@@ -89,10 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const demoLogin = async () => {
-    await login('alex.chen@karma.app', 'demo1234', 'Alex Chen');
   };
 
   const logout = async () => {
@@ -116,7 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         openAuthModal: () => setIsAuthModalOpen(true),
         closeAuthModal: () => setIsAuthModalOpen(false),
         login,
-        demoLogin,
         logout,
         refreshAuth,
       }}

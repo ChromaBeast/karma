@@ -7,7 +7,7 @@ import { ShinyText, Particles } from '@karma/ui';
 import { useAuth } from '../../context/AuthContext';
 
 export const HeroSection: React.FC = () => {
-  const { isAuthenticated, openAuthModal, demoLogin } = useAuth();
+  const { isAuthenticated, openAuthModal } = useAuth();
 
   return (
     <div className="relative rounded-3xl border border-neutral-800 bg-gradient-to-b from-neutral-900 via-neutral-900/90 to-indigo-950/30 p-8 sm:p-12 overflow-hidden shadow-2xl space-y-6">
@@ -17,7 +17,7 @@ export const HeroSection: React.FC = () => {
       {/* Pill Badge */}
       <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/80 border border-indigo-700/60 text-xs text-indigo-300 font-medium">
         <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-        <span>A brag document that actually builds your resumes & portfolio</span>
+        <span>A brag document that actually builds your resumes &amp; portfolio</span>
       </div>
 
       {/* Hero Title & Value Proposition */}
@@ -63,13 +63,13 @@ export const HeroSection: React.FC = () => {
               <span>Start Tracking Free</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-            <button
-              onClick={demoLogin}
+            <Link
+              href="/onboarding"
               className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs sm:text-sm font-semibold border border-neutral-700 transition-all active:scale-95"
             >
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Try Instant Demo (Staff Eng)</span>
-            </button>
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span>Explore Setup Wizard</span>
+            </Link>
           </>
         )}
       </div>
@@ -86,7 +86,7 @@ export const HeroSection: React.FC = () => {
         </div>
         <div className="flex items-center gap-1.5">
           <GitGraph className="w-3.5 h-3.5 text-indigo-400" />
-          <span>STAR & Metric Formatting</span>
+          <span>STAR &amp; Metric Formatting</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-amber-400" />
